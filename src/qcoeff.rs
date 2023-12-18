@@ -1,0 +1,313 @@
+extern crate flint_sys;
+
+use flint_sys::fmpq::*;
+use flint_sys::fmpz::*;
+use num::BigInt;
+use regex::Regex;
+use std::ffi::CString;
+use std::fmt;
+use std::mem::MaybeUninit;
+use std::ops::{Add, Div, Mul, Sub};
+use std::result::Result;
+use std::str::FromStr;
+
+pub struct QCoeff {
+    pub raw: fmpq, // coefficient container
+}
+
+impl QCoeff {
+    // Initialize coefficient to the canonical form of the fraction p / q.
+    pub fn zero() -> Self {
+        unsafe {
+            let mut c = MaybeUninit::uninit();
+            fmpq_init(c.as_mut_ptr());
+            fmpq_zero(c.as_mut_ptr());
+            QCoeff {
+                raw: c.assume_init(),
+            }
+        }
+    }
+    // Initialize coefficient to the canonical form of the fraction p / q.
+    pub fn one() -> Self {
+        unsafe {
+            let mut c = MaybeUninit::uninit();
+            fmpq_init(c.as_mut_ptr());
+            fmpq_one(c.as_mut_ptr());
+            QCoeff {
+                raw: c.assume_init(),
+            }
+        }
+    }
+    // Initialize coefficient to the canonical form of the fraction p / q.
+    pub fn from_int(p: i64, q: u64) -> Self {
+        unsafe {
+            let mut c = MaybeUninit::uninit();
+            fmpq_init(c.as_mut_ptr());
+            fmpq_set_si(c.as_mut_ptr(), p, q);
+            QCoeff {
+                raw: c.assume_init(),
+            }
+        }
+    }
+    //Set a coefficient to the canonical form of the fraction p / q.
+    pub fn set_from_int(&mut self, p: i64, q: u64) {
+        unsafe {
+            fmpq_set_si(&self.raw as *const _ as *mut _, p, q);
+        }
+    }
+    //Set a coefficient to the canonical form a big fraction p / q.
+    pub fn set_from_str(&mut self, rat: &str) -> Result<(), String> {
+        // Convert to C str
+        let c_str = CString::new(rat).unwrap();
+        unsafe {
+            if fmpq_set_str(&mut self.raw as *mut _, c_str.as_ptr(), 10) == 0 {
+                fmpq_canonicalise(&mut self.raw as *mut _);
+                Ok(())
+            } else {
+                Err(format!("Failed to parse string {rat}"))
+            }
+        }
+    }
+    /// Check if the coefficient is zero
+    pub fn is_zero(&self) -> bool {
+        unsafe { fmpq_is_zero(&self.raw as *const _ as *mut _) == 1 }
+    }
+    /// Check if the coefficient is one
+    pub fn is_one(&self) -> bool {
+        unsafe { fmpq_is_one(&self.raw as *const _ as *mut _) == 1 }
+    }
+    /// Check if the coefficient is one
+    pub fn is_int(&self) -> bool {
+        unsafe { fmpz_is_one(&self.raw.den as *const _ as *mut _) == 1 }
+    }
+    /// Rise to integer power
+    pub fn pown(&mut self, n: i64) {
+        let mut res = QCoeff::default();
+        unsafe {
+            fmpq_pow_si(&mut res.raw as *mut _, &mut self.raw as *mut _, n);
+            fmpq_swap(&mut res.raw as *mut _, &mut self.raw as *mut _);
+        }
+    }
+    /// Format to human readable string
+    pub fn to_str(&self) -> String {
+        format!("{}", self).to_string()
+    }
+}
+
+impl Default for QCoeff {
+    /// Default value for QCoeff is zero
+    fn default() -> Self {
+        unsafe {
+            let mut c = MaybeUninit::uninit();
+            fmpq_init(c.as_mut_ptr());
+            fmpq_zero(c.as_mut_ptr());
+            QCoeff {
+                raw: c.assume_init(),
+            }
+        }
+    }
+}
+
+impl FromStr for QCoeff {
+    type Err = String;
+    /// Import the Q value from a str
+    ///Set a coefficient to the canonical form a big fraction p / q.
+    fn from_str(rat: &str) -> Result<Self, Self::Err> {
+        // TODO better check for the string sanity
+        let rg_clean = Regex::new(r"^[\ ]*\+").unwrap();
+        // Convert to C str
+        let c_str = CString::new(rg_clean.replace(rat, "").to_string()).unwrap();
+        unsafe {
+            let mut c = MaybeUninit::uninit();
+            fmpq_init(c.as_mut_ptr());
+            if fmpq_set_str(c.as_mut_ptr(), c_str.as_ptr(), 10) == 0 {
+                fmpq_canonicalise(c.as_mut_ptr());
+                Ok(QCoeff {
+                    raw: c.assume_init(),
+                })
+            } else {
+                Err(format!("Failed to parse string {rat}"))
+            }
+        }
+    }
+}
+
+///Implement addition with operator `+`
+impl<'a, 'b> Add<&'b QCoeff> for &'a QCoeff {
+    type Output = QCoeff;
+
+    fn add(self, other: &'b QCoeff) -> QCoeff {
+        let mut this = QCoeff::default();
+        unsafe {
+            fmpq_add(
+                &mut this.raw as *mut _,
+                &self.raw as *const _ as *mut _,
+                &other.raw as *const _ as *mut _,
+            );
+        }
+        this
+    }
+}
+
+///Implement addition with operator `-`
+impl<'a, 'b> Sub<&'b QCoeff> for &'a QCoeff {
+    type Output = QCoeff;
+
+    fn sub(self, other: &'b QCoeff) -> QCoeff {
+        let mut this = QCoeff::default();
+        unsafe {
+            fmpq_sub(
+                &mut this.raw as *mut _,
+                &self.raw as *const _ as *mut _,
+                &other.raw as *const _ as *mut _,
+            );
+        }
+        this
+    }
+}
+///Implement addition with operator `*`
+impl<'a, 'b> Mul<&'b QCoeff> for &'a QCoeff {
+    type Output = QCoeff;
+
+    fn mul(self, other: &'b QCoeff) -> QCoeff {
+        let mut this = QCoeff::default();
+        unsafe {
+            fmpq_mul(
+                &mut this.raw as *mut _,
+                &self.raw as *const _ as *mut _,
+                &other.raw as *const _ as *mut _,
+            );
+        }
+        this
+    }
+}
+///Implement addition with operator `/`
+impl<'a, 'b> Div<&'b QCoeff> for &'a QCoeff {
+    type Output = QCoeff;
+
+    fn div(self, other: &'b QCoeff) -> QCoeff {
+        let mut this = QCoeff::default();
+        unsafe {
+            fmpq_div(
+                &mut this.raw as *mut _,
+                &self.raw as *const _ as *mut _,
+                &other.raw as *const _ as *mut _,
+            );
+        }
+        this
+    }
+}
+
+/// Clear the content of all raw pointers before dropping QCoeff
+impl Drop for QCoeff {
+    fn drop(&mut self) {
+        unsafe {
+            fmpq_clear(&mut self.raw as *mut _);
+        }
+    }
+}
+
+// To use the `{}` for the structure QCoeff
+impl fmt::Display for QCoeff {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut num = BigInt::default();
+        let mut den = BigInt::default();
+        // Get Sign
+        let sgn = unsafe { (1 + fmpz_sgn(&self.raw.num as *const _ as *mut _)) / 2 };
+        // Set numerator
+        unsafe {
+            for i in 0..fmpz_bits(&self.raw.num as *const _ as *mut _) {
+                num.set_bit(
+                    i,
+                    fmpz_tstbit(&self.raw.num as *const _ as *mut _, i) == sgn,
+                );
+            }
+            // If negative add correction
+            if sgn == 0 {
+                num = -(num + 1u64);
+            }
+        }
+        if sgn == 0 {
+            write!(f, "{}", num)?;
+        } else {
+            write!(f, "+{}", num)?;
+        }
+        if !self.is_int() {
+            // Set denominator
+            unsafe {
+                for i in 0..fmpz_bits(&self.raw.den as *const _ as *mut _) {
+                    den.set_bit(i, fmpz_tstbit(&self.raw.den as *const _ as *mut _, i) == 1);
+                }
+            }
+            write!(f, "/{}", den)?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    #[should_panic]
+    fn bad_string_1() {
+        let coeff_str = "1-1";
+        QCoeff::from_str(coeff_str).expect("bad string");
+    }
+    #[test]
+    #[should_panic]
+    fn bad_string_2() {
+        let coeff_str = "1+1";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        println!("{} -> {}", coeff_str, coeff);
+    }
+    #[test]
+    fn positive_1() {
+        let coeff_str = "+1";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        println!("{:?}", coeff.raw);
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn positive_2() {
+        let coeff_str = "+2";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn negative_1() {
+        let coeff_str = "-1";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn negative_2() {
+        let coeff_str = "-2";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn positive_long_1() {
+        let coeff_str = "+12345678901234567890123456789";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn positive_long_2() {
+        let coeff_str = "+123456789012345678901234567890";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn negative_long_1() {
+        let coeff_str = "-12345678901234567890123456789";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn negative_long_2() {
+        let coeff_str = "-123456789012345678901234567890";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+}
