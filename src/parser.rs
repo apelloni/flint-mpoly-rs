@@ -10,17 +10,29 @@ use std::str::FromStr;
 #[grammar = "grammar.pest"]
 pub struct INIParser;
 
-pub fn parse_mrat(expr: &str, var_names: &[String]) -> QMRat {
+pub fn parse_mrat(expr: &str, var_names: &[String]) -> Result<QMRat, &'static str> {
     let parsed = INIParser::parse(Rule::calculation, expr)
         .expect("Unsuccessful Parse") // unwrap the parse result
         .next()
         .unwrap(); // get and unwrap the `file` rule; never fails
-    let n_var = var_names.len();
-    let mut parsed_polynomial = parsed_eval_rat(parsed.into_inner(), var_names);
-    parsed_polynomial
+    let parsed_mrat = parsed_eval_rat(parsed.into_inner(), var_names).unwrap();
+    Ok(parsed_mrat)
 }
 
-pub fn parsed_eval_rat(parser_rules: Pairs<Rule>, vars: &[String]) -> QMRat {
+pub fn parse_mpoly(expr: &str, var_names: &[String]) -> Result<QMPoly, &'static str> {
+    let parsed = INIParser::parse(Rule::calculation, expr)
+        .expect("Unsuccessful Parse") // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+    let parsed_mrat = parsed_eval_rat(parsed.into_inner(), var_names).unwrap();
+    if parsed_mrat.den.is_one() {
+        Ok(parsed_mrat.num)
+    } else {
+        Err("Expected polynomial found rational function")
+    }
+}
+
+pub fn parsed_eval_rat(parser_rules: Pairs<Rule>, vars: &[String]) -> Result<QMRat, &'static str> {
     let mut block = QMRat::new(vars);
     let mut out = QMRat::new(vars);
     let mut res = QMRat::new(vars);
@@ -75,7 +87,8 @@ pub fn parsed_eval_rat(parser_rules: Pairs<Rule>, vars: &[String]) -> QMRat {
                         }
                     }
                     (_, Rule::num) => {
-                        let coeff = QCoeff::from_str(parsed_rule.clone().into_inner().as_str()).expect("bad string");
+                        let coeff = QCoeff::from_str(parsed_rule.clone().into_inner().as_str())
+                            .expect("bad string");
                         for p in pows.iter_mut() {
                             *p = 0;
                         }
@@ -106,7 +119,7 @@ pub fn parsed_eval_rat(parser_rules: Pairs<Rule>, vars: &[String]) -> QMRat {
                         dpower = last_rule == Rule::divide;
                     }
                     (_, Rule::expr) => {
-                        res = parsed_eval_rat(parsed_rule.into_inner(), vars);
+                        res = parsed_eval_rat(parsed_rule.into_inner(), vars)?;
                         dpower = last_rule == Rule::divide;
                     }
                     _ => panic!("Impossible!"),
@@ -204,7 +217,7 @@ pub fn parsed_eval_rat(parser_rules: Pairs<Rule>, vars: &[String]) -> QMRat {
     }
     //println!("{}", out);
     //println!("{}", out.to_str();
-    out
+    Ok(out)
 }
 
 #[cfg(test)]
@@ -215,48 +228,63 @@ mod test {
     fn color_eyre() {
         color_eyre::install().unwrap();
     }
-    //
+    #[test]
+    #[should_panic]
+    fn parsing_bad_string_1() {
+        let var_names = vec![String::from("x")];
+        let expr_str = "+10//1";
+        parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
+    }
+    #[test]
+    #[should_panic]
+    fn parsing_bad_string_2() {
+        let var_names = vec![String::from("x")];
+        let expr_str = "+10/1*y";
+        parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
+    }
+    #[test]
+    #[should_panic]
+    fn parsing_bad_string_3() {
+        let var_names = vec![String::from("x")];
+        let expr_str = "+10/1/x";
+        parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
+    }
     #[test]
     fn parsing_test_polynomial_1() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "10+a^3*(7+a-a^2)*(w+1)^0";
         println!("input: {}", expr_str);
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
         println!("output: {}", expr_parsed);
-        assert_eq!("-a^5+a^4+7*a^3+10", expr_parsed.num.to_str());
-        assert_eq!("+1", expr_parsed.den.to_str());
+        assert_eq!("-a^5+a^4+7*a^3+10", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_polynomial_2() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "1/2*(1-w/4+w*(1/2-3/4))*4+w^2*(w^23*a^2*w^5)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
-        assert_eq!("+w^30*a^2-w+2", expr_parsed.num.to_str());
-        assert_eq!("+1", expr_parsed.den.to_str());
+        let expr_parsed = parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
+        assert_eq!("+w^30*a^2-w+2", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_polynomial_3() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "1/(1-45^3-4*w*w+(2*w)^2)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
-        assert_eq!("-1/91124", expr_parsed.num.to_str());
-        assert_eq!("+1", expr_parsed.den.to_str());
+        let expr_parsed = parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
+        assert_eq!("-1/91124", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_polynomial_4() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "0+(w)*(-1)+(-w)*(-1)+(-w)+(w)+(-2)*(-2)+(-w)+(2 + w)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
-        assert_eq!("+6", expr_parsed.num.to_str());
-        assert_eq!("+1", expr_parsed.den.to_str());
+        let expr_parsed = parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
+        assert_eq!("+6", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_polynomial_5() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "w^0";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
-        assert_eq!("+1", expr_parsed.num.to_str());
-        assert_eq!("+1", expr_parsed.den.to_str());
+        let expr_parsed = parse_mpoly(expr_str, &var_names).expect("parsing polynomial");
+        assert_eq!("+1", expr_parsed.to_str());
     }
 
     #[test]
@@ -264,7 +292,7 @@ mod test {
         let var_names = vec![String::from("w"), String::from("a")];
 
         let expr_str = "(1-w)^2/(1-w)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("(-w+1)/(+1)", expr_parsed.to_str());
     }
     #[test]
@@ -272,7 +300,7 @@ mod test {
         let var_names = vec![String::from("w"), String::from("a")];
         //let expr_str = "w^0 ";
         let expr_str = "10+a^3*(7+a-a^2)*(w+1)^0";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("(-a^5+a^4+7*a^3+10)/(+1)", expr_parsed.to_str());
     }
     #[test]
@@ -281,7 +309,7 @@ mod test {
         // TEST
         let expr_str = "1/2*(1-w/4+w*(1/2-3/4))*4+w^2*(w^23*a^2*w^5)";
         println!("input: {}", expr_str);
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("(+w^30*a^2-w+2)/(+1)", expr_parsed.to_str());
     }
     #[test]
@@ -289,7 +317,7 @@ mod test {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "1/(1-45^3-4*w*w+(2*w)^2)";
         println!("input: {}", expr_str);
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         println!("output: {}", expr_parsed.to_str());
         assert_eq!("(-1/91124)/(+1)", expr_parsed.to_str());
     }
@@ -298,7 +326,7 @@ mod test {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "0+(w)*(-1)+(-w)*(-1)+(-w)+(w)+(-2)*(-2)+(-w)+(2 + w)";
         println!("input: {}", expr_str);
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         println!("output: {}", expr_parsed.to_str());
         assert_eq!("(+6)/(+1)", expr_parsed.to_str());
     }
@@ -307,7 +335,7 @@ mod test {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "w^0";
         println!("input: {}", expr_str);
-        let mut expr_parsed = parse_mrat(expr_str, &var_names);
+        let mut expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         expr_parsed.reduce();
         println!("output: {}", expr_parsed.to_str());
     }
@@ -316,7 +344,7 @@ mod test {
     fn minus_sign() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "-(1-w)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("+w-1", expr_parsed.num.to_str());
         assert_eq!("+1", expr_parsed.den.to_str());
     }
@@ -325,7 +353,7 @@ mod test {
     fn whitespaces() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "( -     2  *           w  ^  3  + 4 )";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         println!("{}", expr_parsed.num);
         assert_eq!("-2*w^3+4", expr_parsed.num.to_str());
         assert_eq!("+1", expr_parsed.den.to_str());
@@ -335,7 +363,7 @@ mod test {
     fn implicit_multiplication_1() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "10a^3*2(7+a-a^2)*(w+1)^0";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("-20*a^5+20*a^4+140*a^3", expr_parsed.num.to_str());
         assert_eq!("+1", expr_parsed.den.to_str());
     }
@@ -343,7 +371,7 @@ mod test {
     fn implicit_multiplication_2() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "1/2(1-w/4+w(1/2-3/4))4+w^2*(w^23a^2w^5)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("+w^30*a^2-w+2", expr_parsed.num.to_str());
         assert_eq!("+1", expr_parsed.den.to_str());
     }
@@ -352,14 +380,14 @@ mod test {
     fn power_as_double_star_1() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "10+a**3*(7+a-a**2)*(w+1)**0";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("(-a^5+a^4+7*a^3+10)/(+1)", expr_parsed.to_str());
     }
     #[test]
     fn power_as_double_star_2() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "1/2*(1-w/4+w*(1/2-3/4))*4+w**2*(w**23*a**2*w**5)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("+w^30*a^2-w+2", expr_parsed.num.to_str());
         assert_eq!("+1", expr_parsed.den.to_str());
     }
@@ -367,7 +395,7 @@ mod test {
     fn power_as_double_star_3() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "1/(1-45**3-4*w*w+(2*w)**2)";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("-1/91124", expr_parsed.num.to_str());
         assert_eq!("+1", expr_parsed.den.to_str());
     }
@@ -375,7 +403,7 @@ mod test {
     fn power_as_double_star_4() {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "w**0";
-        let expr_parsed = parse_mrat(expr_str, &var_names);
+        let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!("+1", expr_parsed.num.to_str());
         assert_eq!("+1", expr_parsed.den.to_str());
     }
@@ -385,8 +413,8 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         let expr_str = "x1/2^3";
         let res_str = "1/8*x1";
-        let expr = parse_mrat(expr_str, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -395,8 +423,8 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         let expr_str = "x1^4/x1^3";
         let res_str = "x1";
-        let expr = parse_mrat(expr_str, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -405,8 +433,8 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         let expr_str = "x1/(2+1)^3";
         let res_str = "1/27*x1";
-        let expr = parse_mrat(expr_str, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -415,8 +443,8 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         let expr_str = "x1/(2+1)^3+x1*9^2/3/3+x2^4";
         let res_str = "1/27*x1+9*x1+x2^4";
-        let expr = parse_mrat(expr_str, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -425,8 +453,8 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         let expr_str = "(1-x1)/(1+3)^3";
         let res_str = "1/4/4/4*(1-x1)";
-        let expr = parse_mrat(expr_str, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -435,8 +463,8 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         let expr_str = "(1-x1)/(x2)^2";
         let res_str = "(1-x1)/x2/x2";
-        let expr = parse_mrat(expr_str, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -445,8 +473,8 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         let expr_str = "(1-x1)^2/(x2+1)^2*(x2-1)^2";
         let res_str = "(1-x1)*(1-x1)/(x2+1)/(x2+1)*(x2-1)*(x2-1)";
-        let expr = parse_mrat(expr_str, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -456,8 +484,8 @@ mod test {
         // Geometric Series
         let mpoly_string = "(1-x1^11)^2/(1-x1)^2";
         let res_str = "(1+x1+x1^2+x1^3+x1^4+x1^5+x1^6+x1^7+x1^8+x1^9+x1^10)^2";
-        let expr = parse_mrat(mpoly_string, &var_names);
-        let res = parse_mrat(res_str, &var_names);
+        let expr = parse_mrat(mpoly_string, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_str, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -468,7 +496,8 @@ mod test {
         let mut expr = parse_mrat(
             "27/(29 *(37/(28 * x1)+(28 * x1)/2479))+37/(28 * x1)+(28 * x1)/2479",
             &var_names,
-        );
+        )
+        .expect("parsing rational");
         assert_eq!(
             "(+28/2479*x1^4+69079/812*x1^2+3393751/21952)/(+x1^3+91723/784*x1)",
             expr.to_str()
@@ -480,7 +509,7 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
         // Multivariate
         let expr_str = "(+x1+x2)/(+x1-x2)";
-        let mut expr = parse_mrat(expr_str, &var_names);
+        let mut expr = parse_mrat(expr_str, &var_names).expect("parsing rational");
         assert_eq!(expr_str, expr.to_str());
     }
 
@@ -501,7 +530,7 @@ mod test {
         input_string += "^3+(x1+a*x2-x3)*(x1+x2/a+x4)+2*(-2*x1+x3-x4)*(x1+x2/a+x4";
         input_string += ")+(x1+a*x2-x3)*(-2*x1+x3-x4)*(x1+x2/a+x4)+(-2*x1+x3-x4)^";
         input_string += "2*(x1+x2/a+x4)+(x1+x2/a+x4)^2)";
-        let expr = parse_mrat(&input_string, &var_names);
+        let expr = parse_mrat(&input_string, &var_names).expect("parsing rational");
         //expr.reduce();
         assert_eq!(
             "(-2*x1*a+x3*a-x4*a+a)/(+x2^2*a^3-x1*x2*a^2-x2*x4*a^2+x2^2*a+x2*a^2-x1*x2-x2*x4+x2)",
@@ -522,8 +551,8 @@ mod test {
         let mut res_string = String::new();
         res_string += "(+1904*x3*a+11905*x3^2+7444096/1407*x3^2*a^2";
         res_string += "+1904*x2*x3^2*a+1904*x1*x3^2*a)/(+1904*x3^2*a)";
-        let expr = parse_mrat(input_string, &var_names);
-        let res = parse_mrat(&res_string, &var_names);
+        let expr = parse_mrat(input_string, &var_names).expect("parsing rational");
+        let res = parse_mrat(&res_string, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -539,8 +568,8 @@ mod test {
 
         let input_string = "+1/(x1^(-1)+x2^(-1)+x3^(-1)+x4^(-1))";
         let res_string = "(x1*x2*x3*x4)/(x1*x2*x3+x1*x2*x4+x1*x3*x4+x2*x3*x4)";
-        let expr = parse_mrat(input_string, &var_names);
-        let res = parse_mrat(res_string, &var_names);
+        let expr = parse_mrat(input_string, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_string, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -562,8 +591,8 @@ mod test {
         res_string += "6*x4^5*a+5929/256*x1^6*x4^6*a^2+2*x1^6*x3*x4^5+77/8*";
         res_string += "x1^6*x3*x4^6*a+x1^6*x3^2*x4^6+2*x1^6*x2*x4^5+77/8*";
         res_string += "x1^6*x2*x4^6*a+2*x1^6*x2*x3*x4^6+x1^6*x2^2*x4^6)";
-        let expr = parse_mrat(input_string, &var_names);
-        let res = parse_mrat(&res_string, &var_names);
+        let expr = parse_mrat(input_string, &var_names).expect("parsing rational");
+        let res = parse_mrat(&res_string, &var_names).expect("parsing rational");
         println!("{}", expr.to_str());
         assert_eq!(res.to_str(), expr.to_str());
     }
@@ -580,8 +609,8 @@ mod test {
 
         let input_string = "+1/(x1^(-1)+x2^(-1))";
         let res_string = "(x1*x2)/(x1+x2)";
-        let expr = parse_mrat(input_string, &var_names);
-        let res = parse_mrat(res_string, &var_names);
+        let expr = parse_mrat(input_string, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_string, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -597,8 +626,8 @@ mod test {
 
         let input_string = "+1/(x1^(-1)+x2^(-1)+x3^(-1))";
         let res_string = "(x1*x2*x3)/(x2*x3+x1*x3+x1*x2)";
-        let expr = parse_mrat(input_string, &var_names);
-        let res = parse_mrat(res_string, &var_names);
+        let expr = parse_mrat(input_string, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_string, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -614,8 +643,8 @@ mod test {
 
         let input_string = "+1/(x1^(-1))";
         let res_string = "x1";
-        let expr = parse_mrat(input_string, &var_names);
-        let res = parse_mrat(res_string, &var_names);
+        let expr = parse_mrat(input_string, &var_names).expect("parsing rational");
+        let res = parse_mrat(res_string, &var_names).expect("parsing rational");
         assert_eq!(res.to_str(), expr.to_str());
     }
 
@@ -624,10 +653,10 @@ mod test {
         let var_names = vec![String::from("x1"), String::from("x2")];
 
         let expr_str = "(x1 + x2 )";
-        let mut expr_1 = parse_mrat(expr_str, &var_names);
+        let mut expr_1 = parse_mrat(expr_str, &var_names).expect("parsing rational");
         expr_1.pown(200);
         let expr_str_pow = "(x1 + x2 )^200";
-        let expr_2 = parse_mrat(expr_str_pow, &var_names);
+        let expr_2 = parse_mrat(expr_str_pow, &var_names).expect("parsing rational");
         assert_eq!(expr_1.to_str(), expr_2.to_str());
     }
 }
