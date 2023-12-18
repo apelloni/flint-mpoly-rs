@@ -4,7 +4,7 @@ use crate::qmpoly::QMPoly;
 use flint_sys::fmpq_mpoly::*;
 use regex::Regex;
 use std::fmt;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Container for rational polynomials
 pub struct QMRat {
@@ -412,6 +412,32 @@ impl<'a, 'b> Div<&'b QMRat> for &'a QMRat {
         this.num = &self.num * &other.den;
         this.den = &self.den * &other.num;
         this.full_reduce();
+        this
+    }
+}
+
+///Implement negative sign
+/// ```
+/// use flint_mpoly::qmrat::QMRat;
+/// // Define new polynomial
+/// let vars = [String::from("x1"), String::from("x2")];
+/// let mrat = QMRat::from_str("x1/x2",&vars).unwrap();
+/// let mrat_neg = -&mrat;
+/// assert_eq!("(-x1)/(+x2)", mrat_neg.to_str());
+/// ```
+impl<'a> Neg for &'a QMRat {
+    type Output = QMRat;
+    fn neg(self) -> QMRat {
+        // TODO: Check if the two contexts are the same
+        let mut this = QMRat::new(&self.vars);
+        this.den = self.den.clone();
+        unsafe {
+            fmpq_mpoly_neg(
+                &mut this.num.raw as *mut _,
+                &self.num.raw as *const _ as *mut _,
+                &self.num.ctx as *const _ as *mut _,
+            );
+        }
         this
     }
 }

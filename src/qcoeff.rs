@@ -5,7 +5,7 @@ use regex::Regex;
 use std::ffi::CString;
 use std::fmt;
 use std::mem::MaybeUninit;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::result::Result;
 use std::str::FromStr;
 
@@ -271,6 +271,26 @@ impl<'a, 'b> Div<&'b QCoeff> for &'a QCoeff {
                 &self.raw as *const _ as *mut _,
                 &other.raw as *const _ as *mut _,
             );
+        }
+        this
+    }
+}
+
+///Implement negative sign
+/// ```
+/// use flint_mpoly::qcoeff::QCoeff;
+/// use std::str::FromStr;
+/// // Define new polynomial
+/// let c = QCoeff::from_str("13/7").unwrap();
+/// let c_neg = -&c;
+/// assert_eq!("-13/7", c_neg.to_str());
+/// ```
+impl<'a> Neg for &'a QCoeff {
+    type Output = QCoeff;
+    fn neg(self) -> QCoeff {
+        let mut this = QCoeff::default();
+        unsafe {
+            fmpq_neg(&mut this.raw as *mut _, &self.raw as *const _ as *mut _);
         }
         this
     }

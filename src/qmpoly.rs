@@ -6,7 +6,7 @@ use flint_sys::mpoly::ordering_t_ORD_DEGLEX;
 use regex::Regex;
 use std::fmt;
 use std::mem::MaybeUninit;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub struct QMPoly {
     pub raw: fmpq_mpoly_struct,     // Polynomial
@@ -370,6 +370,31 @@ impl<'a, 'b> Mul<&'b QMPoly> for &'a QMPoly {
                 &self.raw as *const _ as *mut _,
                 &other.raw as *const _ as *mut _,
                 &other.ctx as *const _ as *mut _,
+            );
+        }
+        this
+    }
+}
+
+///Implement negative sign
+/// ```
+/// use flint_mpoly::qmpoly::QMPoly;
+/// // Define new polynomial
+/// let vars = [String::from("x1"), String::from("x2")];
+/// let mpoly = QMPoly::from_str("x1",&vars).unwrap();
+/// let mpoly_neg = -&mpoly;
+/// assert_eq!("-x1", mpoly_neg.to_str());
+/// ```
+impl<'a> Neg for &'a QMPoly {
+    type Output = QMPoly;
+
+    fn neg(self) -> QMPoly {
+        let mut this = QMPoly::new(&self.vars);
+        unsafe {
+            fmpq_mpoly_neg(
+                &mut this.raw as *mut _,
+                &self.raw as *const _ as *mut _,
+                &self.ctx as *const _ as *mut _,
             );
         }
         this
