@@ -16,7 +16,12 @@ pub struct QCoeff {
 }
 
 impl QCoeff {
-    // Initialize coefficient to the canonical form of the fraction p / q.
+    /// Initialize coefficient to to zero
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let coeff = QCoeff::zero();
+    /// assert_eq!("0",coeff.to_str());
+    /// ```
     pub fn zero() -> Self {
         unsafe {
             let mut c = MaybeUninit::uninit();
@@ -27,7 +32,13 @@ impl QCoeff {
             }
         }
     }
+
     /// Initialize coefficient to one
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let coeff = QCoeff::one();
+    /// assert_eq!("1",coeff.to_str());
+    /// ```
     pub fn one() -> Self {
         unsafe {
             let mut c = MaybeUninit::uninit();
@@ -38,7 +49,13 @@ impl QCoeff {
             }
         }
     }
+
     /// Initialize coefficient to the canonical form of the fraction p / q
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let coeff = QCoeff::from_int(12,8);
+    /// assert_eq!("3/2",coeff.to_str());
+    /// ```
     pub fn from_int(p: i64, q: u64) -> Self {
         unsafe {
             let mut c = MaybeUninit::uninit();
@@ -49,13 +66,27 @@ impl QCoeff {
             }
         }
     }
-    ///Set a coefficient to the canonical form of the fraction p / q.
+
+    /// Set a coefficient to the canonical form of the fraction p / q.
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let mut coeff = QCoeff::default();
+    /// coeff.set_from_int(12,8);
+    /// assert_eq!("3/2",coeff.to_str());
+    /// ```
     pub fn set_from_int(&mut self, p: i64, q: u64) {
         unsafe {
             fmpq_set_si(&self.raw as *const _ as *mut _, p, q);
         }
     }
-    //Set a coefficient to the canonical form a big fraction p / q.
+
+    /// Set a coefficient from string for arbitrary fractions
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let mut coeff = QCoeff::default();
+    /// coeff.set_from_str("-1283719293715117894283698/28166512").expect("bad string");
+    /// assert_eq!("-641859646857558947141849/14083256",coeff.to_str());
+    /// ```
     pub fn set_from_str(&mut self, rat: &str) -> Result<(), String> {
         // Convert to C str
         let c_str = CString::new(rat).unwrap();
@@ -68,19 +99,47 @@ impl QCoeff {
             }
         }
     }
+
     /// Check if the coefficient is zero
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let coeff = QCoeff::from_int(0,3);
+    /// assert!(coeff.is_zero());
+    /// ```
     pub fn is_zero(&self) -> bool {
         unsafe { fmpq_is_zero(&self.raw as *const _ as *mut _) == 1 }
     }
+
     /// Check if the coefficient is one
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let coeff = QCoeff::from_int(3,3);
+    /// assert!(coeff.is_one());
+    /// ```
     pub fn is_one(&self) -> bool {
         unsafe { fmpq_is_one(&self.raw as *const _ as *mut _) == 1 }
     }
-    /// Check if the coefficient is one
+
+    /// Check if the coefficient is a whole number
+    /// ```
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let coeff = QCoeff::from_int(9,3);
+    /// assert!(coeff.is_int());
+    /// assert_eq!("3",coeff.to_str());
+    /// ```
     pub fn is_int(&self) -> bool {
         unsafe { fmpz_is_one(&self.raw.den as *const _ as *mut _) == 1 }
     }
+
     /// Rise to integer power
+    /// ```
+    /// use std::str::FromStr;
+    /// use flint_mpoly::qcoeff::QCoeff;
+    /// let mut coeff = QCoeff::from_str("-1/2").expect("bad string");
+    /// coeff.pown(-12);
+    /// assert_eq!("4096",coeff.to_str());
+    /// ```
+
     pub fn pown(&mut self, n: i64) {
         let mut res = QCoeff::default();
         unsafe {
@@ -88,6 +147,7 @@ impl QCoeff {
             fmpq_swap(&mut res.raw as *mut _, &mut self.raw as *mut _);
         }
     }
+
     /// Format to human readable string
     pub fn to_str(&self) -> String {
         format!("{}", self).to_string()
@@ -165,6 +225,7 @@ impl<'a, 'b> Sub<&'b QCoeff> for &'a QCoeff {
         this
     }
 }
+
 ///Implement addition with operator `*`
 impl<'a, 'b> Mul<&'b QCoeff> for &'a QCoeff {
     type Output = QCoeff;
@@ -181,7 +242,8 @@ impl<'a, 'b> Mul<&'b QCoeff> for &'a QCoeff {
         this
     }
 }
-///Implement addition with operator `/`
+
+/// Implement addition with operator `/`
 impl<'a, 'b> Div<&'b QCoeff> for &'a QCoeff {
     type Output = QCoeff;
 
