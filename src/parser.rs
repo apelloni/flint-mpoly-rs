@@ -293,7 +293,7 @@ mod test {
 
         let expr_str = "(1-w)^2/(1-w)";
         let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
-        assert_eq!("(-w+1)/(+1)", expr_parsed.to_str());
+        assert_eq!("-w+1", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_mrat_2() {
@@ -301,7 +301,7 @@ mod test {
         //let expr_str = "w^0 ";
         let expr_str = "10+a^3*(7+a-a^2)*(w+1)^0";
         let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
-        assert_eq!("(-a^5+a^4+7*a^3+10)/(+1)", expr_parsed.to_str());
+        assert_eq!("-a^5+a^4+7*a^3+10", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_mrat_3() {
@@ -310,7 +310,7 @@ mod test {
         let expr_str = "1/2*(1-w/4+w*(1/2-3/4))*4+w^2*(w^23*a^2*w^5)";
         println!("input: {}", expr_str);
         let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
-        assert_eq!("(+w^30*a^2-w+2)/(+1)", expr_parsed.to_str());
+        assert_eq!("+w^30*a^2-w+2", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_mrat_4() {
@@ -319,7 +319,7 @@ mod test {
         println!("input: {}", expr_str);
         let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         println!("output: {}", expr_parsed.to_str());
-        assert_eq!("(-1/91124)/(+1)", expr_parsed.to_str());
+        assert_eq!("-1/91124", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_mrat_5() {
@@ -328,7 +328,7 @@ mod test {
         println!("input: {}", expr_str);
         let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
         println!("output: {}", expr_parsed.to_str());
-        assert_eq!("(+6)/(+1)", expr_parsed.to_str());
+        assert_eq!("+6", expr_parsed.to_str());
     }
     #[test]
     fn parsing_test_mrat_6() {
@@ -381,7 +381,7 @@ mod test {
         let var_names = vec![String::from("w"), String::from("a")];
         let expr_str = "10+a**3*(7+a-a**2)*(w+1)**0";
         let expr_parsed = parse_mrat(expr_str, &var_names).expect("parsing rational");
-        assert_eq!("(-a^5+a^4+7*a^3+10)/(+1)", expr_parsed.to_str());
+        assert_eq!("-a^5+a^4+7*a^3+10", expr_parsed.to_str());
     }
     #[test]
     fn power_as_double_star_2() {
