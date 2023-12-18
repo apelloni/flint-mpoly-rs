@@ -9,7 +9,6 @@ use std::mem::MaybeUninit;
 use std::ops::{Add, Div, Mul, Sub};
 
 pub struct QMPoly {
-    //pub raw: MaybeUninit<fmpq_mpoly_struct>,
     pub raw: fmpq_mpoly_struct,     // Polynomial
     pub ctx: fmpq_mpoly_ctx_struct, // Polynomial context
     pub vars: Vec<String>,          // Name of variables
@@ -35,7 +34,6 @@ impl QMPoly {
             let nvars = vars.len() as i64;
             fmpq_mpoly_ctx_init(ctx.as_mut_ptr(), nvars, ordering_t_ORD_DEGLEX);
             fmpq_mpoly_init(raw.as_mut_ptr(), ctx.as_mut_ptr());
-            //fmpq_mpoly_zero(raw.as_mut_ptr(), ctx.as_mut_ptr());
             QMPoly {
                 //raw: raw,
                 raw: raw.assume_init(),
@@ -103,7 +101,7 @@ impl QMPoly {
     /// mpoly.set_from_str("x1+x2").unwrap();
     /// assert_eq!("+x1+x2",mpoly.to_str());
     /// ```
-    pub fn set_from_str(&mut self, expr_str: &str) -> Result<(),&'static str>{
+    pub fn set_from_str(&mut self, expr_str: &str) -> Result<(), &'static str> {
         *self = QMPoly::from_str(expr_str, &self.vars)?;
         Ok(())
     }
@@ -304,7 +302,6 @@ impl QMPoly {
 /// let mpoly_ab = &mpoly_a + &mpoly_b;
 /// assert_eq!("+x1+x2", mpoly_ab.to_str());
 /// ```
-
 impl<'a, 'b> Add<&'b QMPoly> for &'a QMPoly {
     type Output = QMPoly;
 
@@ -350,6 +347,7 @@ impl<'a, 'b> Sub<&'b QMPoly> for &'a QMPoly {
         this
     }
 }
+
 ///Implement addition with operator `*`
 /// ```
 /// use flint_mpoly::qmpoly::QMPoly;
@@ -375,6 +373,21 @@ impl<'a, 'b> Mul<&'b QMPoly> for &'a QMPoly {
             );
         }
         this
+    }
+}
+
+/// Clone for QMPoly
+/// ```
+/// use flint_mpoly::qmpoly::QMPoly;
+/// use std::str::FromStr;
+/// let vars = [String::from("x1"),String::from("x2")];
+/// let mpoly_1 = QMPoly::from_str("x1+x2",&vars).unwrap();
+/// let mpoly_2 = mpoly_1.clone();
+/// assert_eq!(mpoly_1.to_str(),mpoly_2.to_str());
+/// ```
+impl Clone for QMPoly {
+    fn clone(&self) -> Self {
+        QMPoly::clone_from(self)
     }
 }
 

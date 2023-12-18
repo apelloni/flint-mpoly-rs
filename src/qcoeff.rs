@@ -1,5 +1,3 @@
-extern crate flint_sys;
-
 use flint_sys::fmpq::*;
 use flint_sys::fmpz::*;
 use num::BigInt;
@@ -189,6 +187,24 @@ impl FromStr for QCoeff {
                 Err(format!("Failed to parse string {rat}"))
             }
         }
+    }
+}
+
+/// Clone for QCoeff
+/// ```
+/// use flint_mpoly::qcoeff::QCoeff;
+/// use std::str::FromStr;
+/// let c1 = QCoeff::from_str("123/321").unwrap();
+/// let c2 = c1.clone();
+/// assert_eq!(c1.to_str(),c2.to_str());
+/// ```
+impl Clone for QCoeff {
+    fn clone(&self) -> Self {
+        let mut other = QCoeff::default();
+        unsafe {
+            fmpq_set(&mut other.raw as *mut _, &self.raw as *const _ as *mut _);
+        }
+        other
     }
 }
 

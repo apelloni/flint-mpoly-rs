@@ -416,6 +416,21 @@ impl<'a, 'b> Div<&'b QMRat> for &'a QMRat {
     }
 }
 
+/// Clone for QMRat
+/// ```
+/// use flint_mpoly::qmrat::QMRat;
+/// use std::str::FromStr;
+/// let vars = [String::from("x1"),String::from("x2"),String::from("x3")];
+/// let mrat_1 = QMRat::from_str("x1+x3/x2",&vars).unwrap();
+/// let mrat_2 = mrat_1.clone();
+/// assert_eq!(mrat_1.to_str(),mrat_2.to_str());
+/// ```
+impl Clone for QMRat {
+    fn clone(&self) -> Self {
+        QMRat::clone_from(self)
+    }
+}
+
 // To use the `{}` for the structure QMRat
 impl fmt::Display for QMRat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
