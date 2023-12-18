@@ -309,7 +309,7 @@ impl fmt::Display for QMPoly {
                 );
 
                 if fmpq_is_zero(&self._coeff1.raw as *const _ as *mut _) == 0 {
-                    write!(f, "{}", self._coeff1)?;
+                    write!(f, "{:+}", self._coeff1)?;
 
                     for (n, p) in self._exp[..nvars].iter().enumerate() {
                         match *p {

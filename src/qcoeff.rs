@@ -27,7 +27,7 @@ impl QCoeff {
             }
         }
     }
-    // Initialize coefficient to the canonical form of the fraction p / q.
+    /// Initialize coefficient to one
     pub fn one() -> Self {
         unsafe {
             let mut c = MaybeUninit::uninit();
@@ -38,7 +38,7 @@ impl QCoeff {
             }
         }
     }
-    // Initialize coefficient to the canonical form of the fraction p / q.
+    /// Initialize coefficient to the canonical form of the fraction p / q
     pub fn from_int(p: i64, q: u64) -> Self {
         unsafe {
             let mut c = MaybeUninit::uninit();
@@ -49,7 +49,7 @@ impl QCoeff {
             }
         }
     }
-    //Set a coefficient to the canonical form of the fraction p / q.
+    ///Set a coefficient to the canonical form of the fraction p / q.
     pub fn set_from_int(&mut self, p: i64, q: u64) {
         unsafe {
             fmpq_set_si(&self.raw as *const _ as *mut _, p, q);
@@ -210,6 +210,14 @@ impl Drop for QCoeff {
 // To use the `{}` for the structure QCoeff
 impl fmt::Display for QCoeff {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.is_zero() {
+            if f.sign_plus() {
+                write!(f, "{:+}", 0)?;
+            } else {
+                write!(f, "{}", 0)?;
+            }
+            return Ok(());
+        }
         let mut num = BigInt::default();
         let mut den = BigInt::default();
         // Get Sign
@@ -227,10 +235,10 @@ impl fmt::Display for QCoeff {
                 num = -(num + 1u64);
             }
         }
-        if sgn == 0 {
-            write!(f, "{}", num)?;
+        if f.sign_plus() {
+            write!(f, "{:+}", num)?;
         } else {
-            write!(f, "+{}", num)?;
+            write!(f, "{}", num)?;
         }
         if !self.is_int() {
             // Set denominator
@@ -262,17 +270,48 @@ mod test {
         println!("{} -> {}", coeff_str, coeff);
     }
     #[test]
-    fn positive_1() {
+    fn sign() {
         let coeff_str = "+1";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, format!("{coeff:+}").as_str());
+    }
+    #[test]
+    fn unsign() {
+        let coeff_str = "1";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, format!("{coeff}").as_str());
+    }
+    #[test]
+    fn zero() {
+        let coeff_str = "0";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn positive_1() {
+        let coeff_str = "1";
         let coeff = QCoeff::from_str(coeff_str).expect("bad string");
         println!("{:?}", coeff.raw);
         assert_eq!(coeff_str, coeff.to_str());
     }
     #[test]
     fn positive_2() {
-        let coeff_str = "+2";
+        let coeff_str = "2";
         let coeff = QCoeff::from_str(coeff_str).expect("bad string");
         assert_eq!(coeff_str, coeff.to_str());
+    }
+    #[test]
+    fn positive_3() {
+        let coeff_str = "+1";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        println!("{:?}", coeff.raw);
+        assert_eq!(coeff_str, format!("{coeff:+}").as_str());
+    }
+    #[test]
+    fn positive_4() {
+        let coeff_str = "+2";
+        let coeff = QCoeff::from_str(coeff_str).expect("bad string");
+        assert_eq!(coeff_str, format!("{coeff:+}").as_str());
     }
     #[test]
     fn negative_1() {
@@ -288,13 +327,13 @@ mod test {
     }
     #[test]
     fn positive_long_1() {
-        let coeff_str = "+12345678901234567890123456789";
+        let coeff_str = "12345678901234567890123456789";
         let coeff = QCoeff::from_str(coeff_str).expect("bad string");
         assert_eq!(coeff_str, coeff.to_str());
     }
     #[test]
     fn positive_long_2() {
-        let coeff_str = "+123456789012345678901234567890";
+        let coeff_str = "123456789012345678901234567890";
         let coeff = QCoeff::from_str(coeff_str).expect("bad string");
         assert_eq!(coeff_str, coeff.to_str());
     }
