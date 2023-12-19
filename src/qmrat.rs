@@ -469,3 +469,7 @@ impl fmt::Display for QMRat {
         }
     }
 }
+
+// Send and Sync
+unsafe impl Send for QMRat {}
+unsafe impl Sync for QMRat {}

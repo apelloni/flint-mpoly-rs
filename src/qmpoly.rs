@@ -475,3 +475,7 @@ impl fmt::Display for QMPoly {
         Ok(())
     }
 }
+
+// Send and Sync
+unsafe impl Send for QMPoly {}
+unsafe impl Sync for QMPoly {}
