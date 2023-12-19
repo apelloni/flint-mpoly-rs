@@ -282,10 +282,32 @@ impl QMPoly {
             );
         }
     }
+    /// Swap the structure content with another QMPoly provided they have the same context
+    pub fn swap(&mut self, other: &mut Self) {
+        assert!(
+            self.vars == other.vars,
+            "Unmatch variables while swapping expressions"
+        );
+        unsafe {
+            fmpq_mpoly_swap(
+                &mut self.raw as *mut _,
+                &mut other.raw as *mut _,
+                &mut self.ctx as *mut _,
+            );
+        }
+    }
     /// Clear the function and set it to zero
     pub fn clear(&mut self) {
         self.set_to_zero();
     }
+    /// Clear all memory allocated to QMPoly
+    pub fn free(&mut self) {
+        self.clear();
+        unsafe {
+            fmpq_mpoly_realloc(&mut self.raw as *mut _, 0, &mut self.ctx as *mut _);
+        }
+    }
+
     /// Convert the polynomial to a human readable string
     pub fn to_str(&self) -> String {
         let rg = Regex::new(r"([+-])1\*").unwrap();

@@ -138,6 +138,36 @@ impl QMRat {
         }
         this
     }
+    /// Swap the structure content with another QMRat provided they have the same context
+    /// ```
+    /// use flint_mpoly::QMRat;
+    /// let vars = [String::from("x1"),String::from("x2")];
+    /// let mut mrat_a = QMRat::from_str("(x1+x2)/x1",&vars).unwrap();
+    /// let mut mrat_b = QMRat::from_str("x2/(x1-x2)",&vars).unwrap();
+    /// assert_eq!("(+x1+x2)/(+x1)",mrat_a.to_str());
+    /// assert_eq!("(+x2)/(+x1-x2)",mrat_b.to_str());
+    /// mrat_a.swap(&mut mrat_b);
+    /// assert_eq!("(+x1+x2)/(+x1)",mrat_b.to_str());
+    /// assert_eq!("(+x2)/(+x1-x2)",mrat_a.to_str());
+    /// ```
+    pub fn swap(&mut self, other: &mut Self) {
+        assert!(
+            self.vars == other.vars,
+            "Unmatch variables while swapping expressions"
+        );
+        unsafe {
+            fmpq_mpoly_swap(
+                &mut self.num.raw as *mut _,
+                &mut other.num.raw as *mut _,
+                &mut self.num.ctx as *mut _,
+            );
+            fmpq_mpoly_swap(
+                &mut self.den.raw as *mut _,
+                &mut other.den.raw as *mut _,
+                &mut self.den.ctx as *mut _,
+            );
+        }
+    }
     /// Chec if the function is zero
     pub fn is_zero(&self) -> bool {
         self.num.is_zero()
@@ -186,6 +216,9 @@ impl QMRat {
     /// ```
     pub fn reduce(&mut self) {
         self.gcd();
+        if self._gcd.is_one() {
+            return;
+        }
         let mut exact = true;
         unsafe {
             // Simplify the numerator
@@ -326,6 +359,14 @@ impl QMRat {
         // Free the coefficient of the helper functions
         self._gcd.set_to_zero();
         self._res.set_to_zero();
+    }
+    /// Clear all memory allocated to QMRat
+    pub fn free(&mut self) {
+        self.num.free();
+        self.den.free();
+        // Free the coefficient of the helper functions
+        self._gcd.free();
+        self._res.free();
     }
     /// Convert the function to a human readable string
     pub fn to_str(&self) -> String {

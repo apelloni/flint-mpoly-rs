@@ -152,6 +152,13 @@ impl QCoeff {
     pub fn to_str(&self) -> String {
         format!("{}", self).to_string()
     }
+
+    /// Swap content with another QCoeff
+    pub fn swap(&mut self, other: &mut QCoeff) {
+        unsafe {
+            fmpq_swap(&mut self.raw as *mut _, &mut other.raw as *mut _);
+        }
+    }
 }
 
 impl Default for QCoeff {
