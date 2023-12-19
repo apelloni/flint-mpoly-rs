@@ -8,6 +8,8 @@ use std::fmt;
 use std::mem::MaybeUninit;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+/// Container for polynomials over rational numbers
+#[derive(Debug)]
 pub struct QMPoly {
     pub raw: fmpq_mpoly_struct,     // Polynomial
     pub ctx: fmpq_mpoly_ctx_struct, // Polynomial context
@@ -22,7 +24,7 @@ pub struct QMPoly {
 impl QMPoly {
     /// New 0 polynomial with selected variables
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
+    /// use flint_mpoly::QMPoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mpoly = QMPoly::new(&vars);
     /// assert_eq!("0",mpoly.to_str());
@@ -49,7 +51,7 @@ impl QMPoly {
 
     /// Initialize polynomial from string assuming the given variables
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
+    /// use flint_mpoly::QMPoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mpoly= QMPoly::from_str("(x1+x2)", &vars).unwrap();
     /// assert_eq!("+x1+x2",mpoly.to_str());
@@ -61,7 +63,7 @@ impl QMPoly {
     /// Clone will copy the pointers and we will have two objects pointing at the same memory
     /// address. With this function we can create a clone in a safe way
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
+    /// use flint_mpoly::QMPoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mpoly_1= QMPoly::from_str("(x1+x2)", &vars).unwrap();
     /// let mpoly_2= QMPoly::clone_from(&mpoly_1);
@@ -95,7 +97,7 @@ impl QMPoly {
 
     /// Set polynomial from string assuming the variables already stored in QMPoly
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
+    /// use flint_mpoly::QMPoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mut mpoly= QMPoly::new(&vars);
     /// mpoly.set_from_str("x1+x2").unwrap();
@@ -137,8 +139,8 @@ impl QMPoly {
 
     /// Add to the polynomial the coefficient with the specified powers
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QMPoly;
+    /// use flint_mpoly::QCoeff;
     /// // Define new polynomial
     /// let vars = [String::from("x1"), String::from("x2")];
     /// let mut mpoly= QMPoly::new(&vars);
@@ -180,7 +182,7 @@ impl QMPoly {
     /// Add to the polynomial the coefficient p/q with the specified powers
     /// Add to the polynomial the coefficient with the specified powers
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
+    /// use flint_mpoly::QMPoly;
     /// // Define new polynomial
     /// let vars = [String::from("x1"), String::from("x2")];
     /// let mut mpoly= QMPoly::new(&vars);
@@ -223,7 +225,7 @@ impl QMPoly {
 
     /// Add to the polynomial the coefficient p/q with the specified powers
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
+    /// use flint_mpoly::QMPoly;
     /// // Define new polynomial
     /// let vars = [String::from("x1"), String::from("x2")];
     /// let mut mpoly= QMPoly::new(&vars);
@@ -294,7 +296,7 @@ impl QMPoly {
 
 ///Implement addition with operator `+`
 /// ```
-/// use flint_mpoly::qmpoly::QMPoly;
+/// use flint_mpoly::QMPoly;
 /// // Define new polynomial
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mpoly_a = QMPoly::from_str("x1",&vars).unwrap();
@@ -321,8 +323,8 @@ impl<'a, 'b> Add<&'b QMPoly> for &'a QMPoly {
 }
 ///Implement addition with operator `-`
 /// ```
-/// use flint_mpoly::qmpoly::QMPoly;
-/// use flint_mpoly::parser::parse_mpoly;
+/// use flint_mpoly::QMPoly;
+/// use flint_mpoly::parse_mpoly;
 /// // Define new polynomial
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mpoly_a = QMPoly::from_str("x1",&vars).unwrap();
@@ -350,7 +352,7 @@ impl<'a, 'b> Sub<&'b QMPoly> for &'a QMPoly {
 
 ///Implement addition with operator `*`
 /// ```
-/// use flint_mpoly::qmpoly::QMPoly;
+/// use flint_mpoly::QMPoly;
 /// // Define new polynomial
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mpoly_a = QMPoly::from_str("x1",&vars).unwrap();
@@ -378,7 +380,7 @@ impl<'a, 'b> Mul<&'b QMPoly> for &'a QMPoly {
 
 ///Implement negative sign
 /// ```
-/// use flint_mpoly::qmpoly::QMPoly;
+/// use flint_mpoly::QMPoly;
 /// // Define new polynomial
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mpoly = QMPoly::from_str("x1",&vars).unwrap();
@@ -403,7 +405,7 @@ impl<'a> Neg for &'a QMPoly {
 
 /// Clone for QMPoly
 /// ```
-/// use flint_mpoly::qmpoly::QMPoly;
+/// use flint_mpoly::QMPoly;
 /// use std::str::FromStr;
 /// let vars = [String::from("x1"),String::from("x2")];
 /// let mpoly_1 = QMPoly::from_str("x1+x2",&vars).unwrap();

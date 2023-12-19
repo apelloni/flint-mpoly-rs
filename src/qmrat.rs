@@ -1,12 +1,13 @@
-use crate::parser::parse_mrat;
-use crate::qcoeff::QCoeff;
-use crate::qmpoly::QMPoly;
+use crate::parse_mrat;
+use crate::QCoeff;
+use crate::QMPoly;
 use flint_sys::fmpq_mpoly::*;
 use regex::Regex;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-/// Container for rational polynomials
+/// Container for rational polynomials over rational numbers
+#[derive(Debug)]
 pub struct QMRat {
     pub num: QMPoly,       // numerator
     pub den: QMPoly,       // Polynomial context
@@ -20,7 +21,7 @@ pub struct QMRat {
 impl QMRat {
     /// Create a rational function equal to 0
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
+    /// use flint_mpoly::QMRat;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mrat = QMRat::new(&vars);
     /// assert_eq!("0",mrat.to_str());
@@ -42,8 +43,8 @@ impl QMRat {
 
     /// Create a rational function from a polynomial
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
-    /// use flint_mpoly::qmrat::QMRat;
+    /// use flint_mpoly::QMPoly;
+    /// use flint_mpoly::QMRat;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mpoly= QMPoly::from_str("x1+3/4 x2",&vars).unwrap();
     /// let mrat = QMRat::from_mpoly(&mpoly);
@@ -66,8 +67,8 @@ impl QMRat {
     /// Create a rational function from two polynomials defining the numerator and denominator,
     /// respectively
     /// ```
-    /// use flint_mpoly::qmpoly::QMPoly;
-    /// use flint_mpoly::qmrat::QMRat;
+    /// use flint_mpoly::QMPoly;
+    /// use flint_mpoly::QMRat;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let num= QMPoly::from_str("x1+3/4 x2",&vars).unwrap();
     /// let den= QMPoly::from_str("x1-x2",&vars).unwrap();
@@ -88,7 +89,7 @@ impl QMRat {
 
     /// Initialize rational from string assuming the given variables
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
+    /// use flint_mpoly::QMRat;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mrat = QMRat::from_str("(x1+x2)/x1", &vars).unwrap();
     /// assert_eq!("(+x1+x2)/(+x1)",mrat.to_str());
@@ -99,7 +100,7 @@ impl QMRat {
 
     /// Set rational from string assuming the variables already stored in QMRat
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
+    /// use flint_mpoly::QMRat;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mut mrat = QMRat::new(&vars);
     /// mrat.set_from_str("(x1+x2)/x1").unwrap();
@@ -113,7 +114,7 @@ impl QMRat {
     /// Clone will copy the pointers and we will have two objects pointing at the same memory
     /// address. With this function we can create a clone in a safe way
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
+    /// use flint_mpoly::QMRat;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mrat_1 = QMRat::from_str("x1/(x2+1)",&vars).unwrap();
     /// let mrat_2 = QMRat::clone_from(&mrat_1);
@@ -158,8 +159,8 @@ impl QMRat {
     }
     /// Get GCD bewtween numerator and denominator
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
-    /// use flint_mpoly::parser::parse_mpoly;
+    /// use flint_mpoly::QMRat;
+    /// use flint_mpoly::parse_mpoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mut mrat = QMRat::new(&vars);
     /// mrat.num.set_from_str("(1+x1)*(x2-x1)").unwrap();
@@ -174,8 +175,8 @@ impl QMRat {
     /// Reduce by dividing both numerator and denominators by the gcd.
     /// This expression is not guaranteed to return a denominaor or numerator in monic form.
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
-    /// use flint_mpoly::parser::parse_mpoly;
+    /// use flint_mpoly::QMRat;
+    /// use flint_mpoly::parse_mpoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mut mrat = QMRat::new(&vars);
     /// mrat.num.set_from_str("(1+x1)*(x2-x1)").unwrap();
@@ -212,15 +213,15 @@ impl QMRat {
                 &self.den.ctx as *const _ as *mut _,
             );
         }
-        assert!(exact);
+        assert!(exact, "Failed to reduce!");
         self._reduced = true;
     }
 
     /// Normalize to have a monic polynomial at the denominator by dividing both
     /// numerator and denominator by the denominator leading coefficient
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
-    /// use flint_mpoly::parser::parse_mpoly;
+    /// use flint_mpoly::QMRat;
+    /// use flint_mpoly::parse_mpoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mut mrat = QMRat::new(&vars);
     /// mrat.num.set_from_str("(-3-6*x1)").unwrap();
@@ -272,8 +273,8 @@ impl QMRat {
 
     /// Reduce the expression and normalize to have a monic polynomial at the denominator
     /// ```
-    /// use flint_mpoly::qmrat::QMRat;
-    /// use flint_mpoly::parser::parse_mpoly;
+    /// use flint_mpoly::QMRat;
+    /// use flint_mpoly::parse_mpoly;
     /// let vars = [String::from("x1"),String::from("x2")];
     /// let mut mrat = QMRat::new(&vars);
     /// mrat.num.set_from_str("(1+x1)*(x2-x1)").unwrap();
@@ -336,7 +337,7 @@ impl QMRat {
 
 ///Implement addition with operator `+`
 /// ```
-/// use flint_mpoly::qmrat::QMRat;
+/// use flint_mpoly::QMRat;
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mrat_a = QMRat::from_str("1/x1",&vars).unwrap();
 /// let mrat_b = QMRat::from_str("1/x2",&vars).unwrap();
@@ -357,7 +358,7 @@ impl<'a, 'b> Add<&'b QMRat> for &'a QMRat {
 
 ///Implement addition with operator `-`
 /// ```
-/// use flint_mpoly::qmrat::QMRat;
+/// use flint_mpoly::QMRat;
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mrat_a = QMRat::from_str("1/x1",&vars).unwrap();
 /// let mrat_b = QMRat::from_str("1/x2",&vars).unwrap();
@@ -377,7 +378,7 @@ impl<'a, 'b> Sub<&'b QMRat> for &'a QMRat {
 }
 ///Implement addition with operator `*`
 /// ```
-/// use flint_mpoly::qmrat::QMRat;
+/// use flint_mpoly::QMRat;
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mrat_a = QMRat::from_str("1/x1",&vars).unwrap();
 /// let mrat_b = QMRat::from_str("1/x2",&vars).unwrap();
@@ -397,7 +398,7 @@ impl<'a, 'b> Mul<&'b QMRat> for &'a QMRat {
 }
 ///Implement addition with operator `/`
 /// ```
-/// use flint_mpoly::qmrat::QMRat;
+/// use flint_mpoly::QMRat;
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mrat_a = QMRat::from_str("1/x1",&vars).unwrap();
 /// let mrat_b = QMRat::from_str("1/x2",&vars).unwrap();
@@ -418,7 +419,7 @@ impl<'a, 'b> Div<&'b QMRat> for &'a QMRat {
 
 ///Implement negative sign
 /// ```
-/// use flint_mpoly::qmrat::QMRat;
+/// use flint_mpoly::QMRat;
 /// // Define new polynomial
 /// let vars = [String::from("x1"), String::from("x2")];
 /// let mrat = QMRat::from_str("x1/x2",&vars).unwrap();
@@ -444,7 +445,7 @@ impl<'a> Neg for &'a QMRat {
 
 /// Clone for QMRat
 /// ```
-/// use flint_mpoly::qmrat::QMRat;
+/// use flint_mpoly::QMRat;
 /// use std::str::FromStr;
 /// let vars = [String::from("x1"),String::from("x2"),String::from("x3")];
 /// let mrat_1 = QMRat::from_str("x1+x3/x2",&vars).unwrap();

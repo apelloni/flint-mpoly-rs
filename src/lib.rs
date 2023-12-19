@@ -8,8 +8,12 @@ extern crate pest_derive;
 // TODO: use it
 pub const MAX_VARIABLE: usize = 10;
 
-pub mod qcoeff;
-pub mod qmpoly;
-pub mod qmrat;
-pub mod parser;
-//use utils::{multinomial, next_combination_with_replacement};
+mod parser;
+mod qcoeff;
+mod qmpoly;
+mod qmrat;
+
+pub use crate::parser::{parse_mpoly, parse_mrat};
+pub use crate::qcoeff::QCoeff;
+pub use crate::qmpoly::QMPoly;
+pub use crate::qmrat::QMRat;

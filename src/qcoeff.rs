@@ -9,6 +9,8 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::result::Result;
 use std::str::FromStr;
 
+/// Container for arbitrary precision rational numbers
+#[derive(Debug)]
 pub struct QCoeff {
     pub raw: fmpq, // coefficient container
 }
@@ -16,7 +18,7 @@ pub struct QCoeff {
 impl QCoeff {
     /// Initialize coefficient to to zero
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let coeff = QCoeff::zero();
     /// assert_eq!("0",coeff.to_str());
     /// ```
@@ -33,7 +35,7 @@ impl QCoeff {
 
     /// Initialize coefficient to one
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let coeff = QCoeff::one();
     /// assert_eq!("1",coeff.to_str());
     /// ```
@@ -50,7 +52,7 @@ impl QCoeff {
 
     /// Initialize coefficient to the canonical form of the fraction p / q
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let coeff = QCoeff::from_int(12,8);
     /// assert_eq!("3/2",coeff.to_str());
     /// ```
@@ -67,7 +69,7 @@ impl QCoeff {
 
     /// Set a coefficient to the canonical form of the fraction p / q.
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let mut coeff = QCoeff::default();
     /// coeff.set_from_int(12,8);
     /// assert_eq!("3/2",coeff.to_str());
@@ -80,7 +82,7 @@ impl QCoeff {
 
     /// Set a coefficient from string for arbitrary fractions
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let mut coeff = QCoeff::default();
     /// coeff.set_from_str("-1283719293715117894283698/28166512").expect("bad string");
     /// assert_eq!("-641859646857558947141849/14083256",coeff.to_str());
@@ -100,7 +102,7 @@ impl QCoeff {
 
     /// Check if the coefficient is zero
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let coeff = QCoeff::from_int(0,3);
     /// assert!(coeff.is_zero());
     /// ```
@@ -110,7 +112,7 @@ impl QCoeff {
 
     /// Check if the coefficient is one
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let coeff = QCoeff::from_int(3,3);
     /// assert!(coeff.is_one());
     /// ```
@@ -120,7 +122,7 @@ impl QCoeff {
 
     /// Check if the coefficient is a whole number
     /// ```
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let coeff = QCoeff::from_int(9,3);
     /// assert!(coeff.is_int());
     /// assert_eq!("3",coeff.to_str());
@@ -132,7 +134,7 @@ impl QCoeff {
     /// Rise to integer power
     /// ```
     /// use std::str::FromStr;
-    /// use flint_mpoly::qcoeff::QCoeff;
+    /// use flint_mpoly::QCoeff;
     /// let mut coeff = QCoeff::from_str("-1/2").expect("bad string");
     /// coeff.pown(-12);
     /// assert_eq!("4096",coeff.to_str());
@@ -192,7 +194,7 @@ impl FromStr for QCoeff {
 
 /// Clone for QCoeff
 /// ```
-/// use flint_mpoly::qcoeff::QCoeff;
+/// use flint_mpoly::QCoeff;
 /// use std::str::FromStr;
 /// let c1 = QCoeff::from_str("123/321").unwrap();
 /// let c2 = c1.clone();
@@ -278,7 +280,7 @@ impl<'a, 'b> Div<&'b QCoeff> for &'a QCoeff {
 
 ///Implement negative sign
 /// ```
-/// use flint_mpoly::qcoeff::QCoeff;
+/// use flint_mpoly::QCoeff;
 /// use std::str::FromStr;
 /// // Define new polynomial
 /// let c = QCoeff::from_str("13/7").unwrap();

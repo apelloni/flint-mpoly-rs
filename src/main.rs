@@ -1,7 +1,4 @@
-extern crate flint_mpoly;
-use flint_mpoly::qcoeff::*;
-use flint_mpoly::qmpoly::*;
-use flint_mpoly::qmrat::*;
+use flint_mpoly::*;
 //use flint_mpoly::parser::*;
 
 use std::str::FromStr;
