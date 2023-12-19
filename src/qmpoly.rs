@@ -308,7 +308,10 @@ impl<'a, 'b> Add<&'b QMPoly> for &'a QMPoly {
     type Output = QMPoly;
 
     fn add(self, other: &'b QMPoly) -> QMPoly {
-        // TODO: Check if the two contexts are the same
+        assert!(
+            self.vars == other.vars,
+            "Unmatch variables in binary operation"
+        );
         let mut this = QMPoly::new(&self.vars);
         unsafe {
             fmpq_mpoly_add(
@@ -336,7 +339,10 @@ impl<'a, 'b> Sub<&'b QMPoly> for &'a QMPoly {
     type Output = QMPoly;
 
     fn sub(self, other: &'b QMPoly) -> QMPoly {
-        // TODO: Check if the two contexts are the same
+        assert!(
+            self.vars == other.vars,
+            "Unmatch variables in binary operation"
+        );
         let mut this = QMPoly::new(&self.vars);
         unsafe {
             fmpq_mpoly_sub(
@@ -364,7 +370,10 @@ impl<'a, 'b> Mul<&'b QMPoly> for &'a QMPoly {
     type Output = QMPoly;
 
     fn mul(self, other: &'b QMPoly) -> QMPoly {
-        // TODO: Check if the two contexts are the same
+        assert!(
+            self.vars == other.vars,
+            "Unmatch variables in binary operation"
+        );
         let mut this = QMPoly::new(&self.vars);
         unsafe {
             fmpq_mpoly_mul(
