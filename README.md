@@ -40,13 +40,13 @@ multivariate polynomial for rust with FLINT backend
  // Parse expression from string
  let f = QMRat::from_str("(1+x1+x1^2)/(1-x1^3)*x2",&vars).unwrap();
 
- // The parsed result is already reduce to the canonical form
+ // The parsed result is already reduced to the canonical form
  assert_eq!("(-x2)/(+x1-1)",f.to_str());
 ```
 
-Alternatively one can also add each coefficient individually, for example when
+Alternatively, one can also add each coefficient individually, for example when
 importing it from other structures.
-This is defined for polynomials where one can simply add coefficients.
+This is defined for polynomials where one can add coefficients to an existing function.
 
 ```rust
  use flint_mpoly::{QMPoly, QCoeff};
@@ -58,11 +58,11 @@ This is defined for polynomials where one can simply add coefficients.
  // Create QMPoly object
  let mut f = QMPoly::new(&vars);  // currently 0
 
- // Feed coefficients into MPoly usind different methods
+ // Feed coefficients into MPoly using different methods
  f.add_coeff_pq(&[2,0],1,2);                            // add 1/2*x1^2
  f.add_coeff_str(&[1,1],"5");                           // add 5*x1*x2
  f.add_coeff(&[1,1],&QCoeff::from_str("3/2").unwrap()); // add 3/2*x1*x2
 
- // The parsed result is already reduce to the canonical form
+ // The result already has all coefficients collected together
  assert_eq!("+1/2*x1^2+13/2*x1*x2",f.to_str());
 ```
