@@ -29,8 +29,12 @@ multivariate polynomial for rust with FLINT backend
 
  ---
  # Examples
-
+<details>
+ <summary>
+  
 ### Parse an expression
+ </summary>
+ 
 ```rust
  use flint_mpoly::QMRat;
 
@@ -66,3 +70,4 @@ This is defined for polynomials where one can add coefficients to an existing fu
  // The result already has all coefficients collected together
  assert_eq!("+1/2*x1^2+13/2*x1*x2",f.to_str());
 ```
+</details>
