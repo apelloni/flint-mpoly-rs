@@ -168,6 +168,13 @@ impl QMRat {
             );
         }
     }
+    /// Set function to zero and return the previous value
+    pub fn zero_move(&mut self) -> QMRat {
+        let mut out = QMRat::new(&self.vars);
+        out.swap(self);
+        out
+    }
+
     /// Chec if the function is zero
     pub fn is_zero(&self) -> bool {
         self.num.is_zero()
