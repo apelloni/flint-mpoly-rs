@@ -296,6 +296,21 @@ impl QMPoly {
             );
         }
     }
+    /// Set function to zero and return the previous value
+    /// ```
+    /// use flint_mpoly::QMPoly;
+    /// let vars = [String::from("x1"),String::from("x2")];
+    /// let mut mpoly_a = QMPoly::from_str("+x1+x2",&vars).unwrap();
+    /// assert_eq!("+x1+x2",mpoly_a.to_str());
+    /// let mut mpoly_b = mpoly_a.zero_move();
+    /// assert_eq!("0",mpoly_a.to_str());
+    /// assert_eq!("+x1+x2",mpoly_b.to_str());
+    /// ```
+    pub fn zero_move(&mut self) -> Self {
+        let mut out = Self::new(&self.vars);
+        out.swap(self);
+        out
+    }
     /// Clear the function and set it to zero
     pub fn clear(&mut self) {
         self.set_to_zero();

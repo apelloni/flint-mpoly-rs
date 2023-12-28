@@ -169,12 +169,20 @@ impl QMRat {
         }
     }
     /// Set function to zero and return the previous value
-    pub fn zero_move(&mut self) -> QMRat {
-        let mut out = QMRat::new(&self.vars);
+    /// ```
+    /// use flint_mpoly::QMRat;
+    /// let vars = [String::from("x1"),String::from("x2")];
+    /// let mut mrat_a = QMRat::from_str("(x1+x2)/x1",&vars).unwrap();
+    /// assert_eq!("(+x1+x2)/(+x1)",mrat_a.to_str());
+    /// let mut mrat_b = mrat_a.zero_move();
+    /// assert_eq!("0",mrat_a.to_str());
+    /// assert_eq!("(+x1+x2)/(+x1)",mrat_b.to_str());
+    /// ```
+    pub fn zero_move(&mut self) -> Self {
+        let mut out = Self::new(&self.vars);
         out.swap(self);
         out
     }
-
     /// Chec if the function is zero
     pub fn is_zero(&self) -> bool {
         self.num.is_zero()
