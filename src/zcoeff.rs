@@ -273,6 +273,27 @@ impl<'a> Neg for &'a ZCoeff {
     }
 }
 
+///Implement comparison ==
+/// ```
+/// use flint_mpoly::ZCoeff;
+/// use std::str::FromStr;
+/// // Define new polynomial
+/// let c1 = ZCoeff::from_str("7").unwrap();
+/// let c2 = ZCoeff::from_str("7").unwrap();
+/// assert_eq!(c1,c2);
+/// assert!(c1==c2);
+/// ```
+impl PartialEq for ZCoeff {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe {
+            fmpz_equal(
+                &self.raw as *const _ as *mut _,
+                &other.raw as *const _ as *mut _,
+            ) == 1
+        }
+    }
+}
+
 /// Clear the content of all raw pointers before dropping ZCoeff
 impl Drop for ZCoeff {
     fn drop(&mut self) {

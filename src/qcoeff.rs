@@ -305,6 +305,27 @@ impl<'a> Neg for &'a QCoeff {
     }
 }
 
+///Implement comparison ==
+/// ```
+/// use flint_mpoly::QCoeff;
+/// use std::str::FromStr;
+/// // Define new polynomial
+/// let c1 = QCoeff::from_str("13/7").unwrap();
+/// let c2 = QCoeff::from_str("26/14").unwrap();
+/// assert_eq!(c1,c2);
+/// assert!(c1==c2);
+/// ```
+impl PartialEq for QCoeff {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe {
+            fmpq_equal(
+                &self.raw as *const _ as *mut _,
+                &other.raw as *const _ as *mut _,
+            ) == 1
+        }
+    }
+}
+
 /// Clear the content of all raw pointers before dropping QCoeff
 impl Drop for QCoeff {
     fn drop(&mut self) {
