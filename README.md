@@ -4,13 +4,13 @@ multivariate polynomial for rust with FLINT backend
 
 ## Coefficients
  - [x] `QCoeff`: Coefficients that take values in $\mathbb{Q}$ (from: `fmpq.h`)
- - [ ] `ZCoeff`: Coefficients that take values in $\mathbb{Z}$ (from: `fmpz.h`)
+ - [x] `ZCoeff`: Coefficients that take values in $\mathbb{Z}$ (from: `fmpz.h`)
  - [ ] `ModCoeff`: Coefficients that take values in $\mathbb{Z}/p\mathbb{Z}$ (from: `fmpz_mod.h`)
 
 ## Polynomials
 #### Multivariate
  - [x] `QMPoly`: Multivariate Polynomials in $\mathbb{Q}[x_1,x_2,..]$ (from: `fmpq_mpoly.h`)
- - [ ] `ZMPoly`: Multivariate Polynomials in $\mathbb{Z}[x_1,x_2,..]$ (from: `fmpz_mpoly.h`)
+ - [x] `ZMPoly`: Multivariate Polynomials in $\mathbb{Z}[x_1,x_2,..]$ (from: `fmpz_mpoly.h`)
  - [ ] `ModMPoly`: Multivariate Polynomials in $\mathbb{Z}/p\mathbb{Z}[x_1,x_2,..]$ (from: `fmpz_mod_mpoly.h`)
 #### Univariate
  - [ ] `QPoly`: Univariate Polynomials in $\mathbb{Q}[x]$ (from: `fmpq_poly.h`)
@@ -20,7 +20,7 @@ multivariate polynomial for rust with FLINT backend
 ## Rational Polynomials
 #### Multivariate
  - [x] `QMRat`: Multivariate Rational in $\mathbb{Q}(x_1,x_2,..)$
- - [ ] `ZMRat`: Multivariate Rational in $\mathbb{Z}(x_1,x_2,..)$
+ - [x] `ZMRat`: Multivariate Rational in $\mathbb{Z}(x_1,x_2,..)$
  - [ ] `ModMRat`: Multivariate Rational in $\mathbb{Z}/p\mathbb{Z}(x_1,x_2,..)$
 #### Univariate
  - [ ] `QRat`: Univariate Rational in $\mathbb{Q}(x)$
@@ -31,10 +31,10 @@ multivariate polynomial for rust with FLINT backend
  # Examples
 <details>
  <summary>
-  
+
 ### Parse an expression
  </summary>
- 
+
 ```rust
  use flint_mpoly::QMRat;
 
