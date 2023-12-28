@@ -1,6 +1,5 @@
 use crate::parse_mrat;
-use crate::QCoeff;
-use crate::QMPoly;
+use crate::{QCoeff, QMPoly, ZMPoly, ZMRat};
 use flint_sys::fmpq_mpoly::*;
 use regex::Regex;
 use std::fmt;
@@ -388,6 +387,78 @@ impl QMRat {
         let rg = Regex::new(r"([+-])1\*").unwrap();
         rg.replace_all(format!("{}", self).as_str(), "$1")
             .to_string()
+    }
+    /// Convert to ZMRat
+    pub fn to_zmrat(&mut self) -> Result<ZMRat, &'static str> {
+        unsafe {
+            // Get numerical denominator of the QMPoly at the numerator
+            fmpq_mpoly_get_denominator(
+                &self._coeff.raw as *const _ as *mut _,
+                &self.num.raw as *const _ as *mut _,
+                &self.num.ctx as *const _ as *mut _,
+            );
+            // Rescale numerator
+            fmpq_mpoly_scalar_mul_fmpq(
+                &self._res.raw as *const _ as *mut _,
+                &self.num.raw as *const _ as *mut _,
+                &self._coeff.raw as *const _ as *mut _,
+                &self.num.ctx as *const _ as *mut _,
+            );
+            fmpq_mpoly_swap(
+                &self._res.raw as *const _ as *mut _,
+                &self.num.raw as *const _ as *mut _,
+                &self.num.ctx as *const _ as *mut _,
+            );
+            // Rescale denominator
+            fmpq_mpoly_scalar_mul_fmpq(
+                &self._res.raw as *const _ as *mut _,
+                &self.den.raw as *const _ as *mut _,
+                &self._coeff.raw as *const _ as *mut _,
+                &self.den.ctx as *const _ as *mut _,
+            );
+            fmpq_mpoly_swap(
+                &self._res.raw as *const _ as *mut _,
+                &self.den.raw as *const _ as *mut _,
+                &self.den.ctx as *const _ as *mut _,
+            );
+
+            // Get numerical denominator of the QMPoly at the denominator
+            fmpq_mpoly_get_denominator(
+                &self._coeff.raw as *const _ as *mut _,
+                &self.den.raw as *const _ as *mut _,
+                &self.den.ctx as *const _ as *mut _,
+            );
+            // Rescale numerator
+            fmpq_mpoly_scalar_mul_fmpq(
+                &self._res.raw as *const _ as *mut _,
+                &self.num.raw as *const _ as *mut _,
+                &self._coeff.raw as *const _ as *mut _,
+                &self.num.ctx as *const _ as *mut _,
+            );
+            fmpq_mpoly_swap(
+                &self._res.raw as *const _ as *mut _,
+                &self.num.raw as *const _ as *mut _,
+                &self.num.ctx as *const _ as *mut _,
+            );
+            // Rescale denominator
+            fmpq_mpoly_scalar_mul_fmpq(
+                &self._res.raw as *const _ as *mut _,
+                &self.den.raw as *const _ as *mut _,
+                &self._coeff.raw as *const _ as *mut _,
+                &self.den.ctx as *const _ as *mut _,
+            );
+            fmpq_mpoly_swap(
+                &self._res.raw as *const _ as *mut _,
+                &self.den.raw as *const _ as *mut _,
+                &self.den.ctx as *const _ as *mut _,
+            );
+        }
+
+        // Fill ZMRat
+        let mut res = ZMRat::new(&self.vars);
+        res.num = self.num.to_zmpoly()?;
+        res.den= self.den.to_zmpoly()?;
+        Ok(res)
     }
 }
 
