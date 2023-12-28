@@ -1,5 +1,20 @@
-//extern crate f128;
-//extern crate itertools;
+//! Polynomial manipulation using the powerful [Flint] (Fast Library for Number Theory)
+//! library to deal with the arithmetic over a variaty of rings, such as,
+//! - __Integers__:
+//!     - [Coefficients](ZCoeff)
+//!     - [Polynomials](ZMPoly)
+//!     - [Rational Functions](ZMRat)
+//! - __Rationals__:
+//!     - [Coefficients](QCoeff)
+//!     - [Polynomials](QMPoly)
+//!     - [Rational Functions](QMRat)
+//! - __Finite Fields__:
+//!     - [Coefficients](ModCoeff)
+//!     - ~~Polynomials~~
+//!     - ~~Rational Functions~~
+//!
+//! [Flint]: https://flintlib.org
+//!
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
