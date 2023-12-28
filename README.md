@@ -5,7 +5,7 @@ multivariate polynomial for rust with FLINT backend
 ## Coefficients
  - [x] `QCoeff`: Coefficients that take values in $\mathbb{Q}$ (from: `fmpq.h`)
  - [x] `ZCoeff`: Coefficients that take values in $\mathbb{Z}$ (from: `fmpz.h`)
- - [ ] `ModCoeff`: Coefficients that take values in $\mathbb{Z}/p\mathbb{Z}$ (from: `fmpz_mod.h`)
+ - [x] `ModCoeff`: Coefficients that take values in $\mathbb{Z}/p\mathbb{Z}$ (from: `fmpz_mod.h`)
 
 ## Polynomials
 #### Multivariate

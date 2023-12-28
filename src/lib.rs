@@ -17,6 +17,8 @@ mod qmrat;
 mod zcoeff;
 mod zmpoly;
 mod zmrat;
+/// Modulus
+mod modcoeff;
 
 pub use crate::parser::{parse_mpoly, parse_mrat};
 /// Rational
@@ -27,3 +29,5 @@ pub use crate::qmrat::QMRat;
 pub use crate::zcoeff::ZCoeff;
 pub use crate::zmpoly::ZMPoly;
 pub use crate::zmrat::ZMRat;
+/// Modulus
+pub use crate::modcoeff::ModCoeff;
