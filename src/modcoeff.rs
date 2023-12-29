@@ -95,10 +95,11 @@ impl ModCoeff {
     /// Import the Q value from a str
     /// ```
     /// use flint_mpoly::ModCoeff;
-    /// let mut coeff = ModCoeff::from_str(&17,"-1283719293715117894283698/28166512").expect("bad string");
+    /// let modulo = 17;
+    /// let mut coeff = ModCoeff::from_str("-1283719293715117894283698/28166512",&modulo).expect("bad string");
     /// assert_eq!("4",coeff.to_str());
     /// ```
-    pub fn from_str(modulo: &u64, rat: &str) -> Result<Self, String> {
+    pub fn from_str(rat: &str, modulo: &u64) -> Result<Self, String> {
         // Set modulo
         let n = ZCoeff::from_int((*modulo).try_into().expect("modulo not fitting in i64"));
         // Convert to QCoeff fraction
@@ -130,10 +131,11 @@ impl ModCoeff {
     /// Initialize coefficient to the canonical form of the fraction p / q
     /// ```
     /// use flint_mpoly::ModCoeff;
-    /// let mut coeff = ModCoeff::from_int(&7, 12);
+    /// let modulo = 7;
+    /// let mut coeff = ModCoeff::from_int(12, &modulo);
     /// assert_eq!("5",coeff.to_str());
     /// ```
-    pub fn from_int(modulo: &u64, c: i64) -> Self {
+    pub fn from_int(c: i64, modulo: &u64) -> Self {
         // Set modulo
         let n = ZCoeff::from_int((*modulo).try_into().expect("modulo not fitting in i64"));
         unsafe {
@@ -194,7 +196,8 @@ impl ModCoeff {
     /// Check if the coefficient is zero
     /// ```
     /// use flint_mpoly::ModCoeff;
-    /// let coeff = ModCoeff::from_int(&19,0);
+    /// let modulo = 19;
+    /// let coeff = ModCoeff::from_int(0,&modulo);
     /// assert!(coeff.is_zero());
     /// ```
     pub fn is_zero(&self) -> bool {
@@ -204,7 +207,8 @@ impl ModCoeff {
     /// Check if the coefficient is one
     /// ```
     /// use flint_mpoly::ModCoeff;
-    /// let coeff = ModCoeff::from_int(&19,20);
+    /// let modulo = 19;
+    /// let coeff = ModCoeff::from_int(20,&modulo);
     /// assert!(coeff.is_one());
     /// ```
     pub fn is_one(&self) -> bool {
@@ -232,7 +236,7 @@ impl ModCoeff {
     /// ```
     /// use flint_mpoly::ModCoeff;
     /// let modulo = 7;
-    /// let mut coeff = ModCoeff::from_str(&modulo,"-1/2").expect("bad string");
+    /// let mut coeff = ModCoeff::from_str("-1/2",&modulo).expect("bad string");
     /// coeff.pown(12);
     /// assert_eq!("1",coeff.to_str());
     /// ```
@@ -270,7 +274,7 @@ impl ModCoeff {
 /// use flint_mpoly::ModCoeff;
 /// use std::str::FromStr;
 /// let modulo = 7;
-/// let c1 = ModCoeff::from_str(&modulo, "123/321").unwrap();
+/// let c1 = ModCoeff::from_str( "123/321",&modulo).unwrap();
 /// let c2 = c1.clone();
 /// assert_eq!(c1.to_str(),c2.to_str());
 /// ```
@@ -381,7 +385,7 @@ impl<'a, 'b> Div<&'b ModCoeff> for &'a ModCoeff {
 /// use flint_mpoly::ModCoeff;
 /// use std::str::FromStr;
 /// let modulo = 17;
-/// let c = ModCoeff::from_str(&modulo, "13/7").unwrap();
+/// let c = ModCoeff::from_str( "13/7",&modulo).unwrap();
 /// let c_neg = -&c;
 /// assert_eq!("3", c_neg.to_str());
 /// ```
@@ -452,42 +456,42 @@ mod test {
     fn bad_string_1() {
         let modulo = 11311;
         let coeff_str = "1-1";
-        ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
     }
     #[test]
     #[should_panic]
     fn bad_string_2() {
         let modulo = 11311;
         let coeff_str = "1+1";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         println!("{} -> {}", coeff_str, coeff);
     }
     #[test]
     fn sign() {
         let modulo = 11311;
         let coeff_str = "+1";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(coeff_str, format!("{coeff:+}").as_str());
     }
     #[test]
     fn unsign() {
         let modulo = 11311;
         let coeff_str = "1";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(coeff_str, format!("{coeff}").as_str());
     }
     #[test]
     fn zero() {
         let modulo = 11311;
         let coeff_str = "0";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(coeff_str, coeff.to_str());
     }
     #[test]
     fn positive_1() {
         let modulo = 11311;
         let coeff_str = "1";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         println!("{:?}", coeff.raw);
         assert_eq!(coeff_str, coeff.to_str());
     }
@@ -495,14 +499,14 @@ mod test {
     fn positive_2() {
         let modulo = 11311;
         let coeff_str = "2";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(coeff_str, coeff.to_str());
     }
     #[test]
     fn positive_3() {
         let modulo = 11311;
         let coeff_str = "+1";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         println!("{:?}", coeff.raw);
         assert_eq!(coeff_str, format!("{coeff:+}").as_str());
     }
@@ -510,49 +514,49 @@ mod test {
     fn positive_4() {
         let modulo = 11311;
         let coeff_str = "+2";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(coeff_str, format!("{coeff:+}").as_str());
     }
     #[test]
     fn negative_1() {
         let modulo = 11311;
         let coeff_str = "-1";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(11310.to_string(), coeff.to_str());
     }
     #[test]
     fn negative_2() {
         let modulo = 11311;
         let coeff_str = "-2";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(11309.to_string(), coeff.to_str());
     }
     #[test]
     fn positive_long_1() {
         let modulo = 11311;
         let coeff_str = "12345678901234567890123456789";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(2352.to_string(), coeff.to_str());
     }
     #[test]
     fn positive_long_2() {
         let modulo = 11311;
         let coeff_str = "123456789012345678901234567890";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(898.to_string(), coeff.to_str());
     }
     #[test]
     fn negative_long_1() {
         let modulo = 11311;
         let coeff_str = "-12345678901234567890123456789";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(8959.to_string(), coeff.to_str());
     }
     #[test]
     fn negative_long_2() {
         let modulo = 11311;
         let coeff_str = "-123456789012345678901234567890";
-        let coeff = ModCoeff::from_str(&modulo, coeff_str).expect("bad string");
+        let coeff = ModCoeff::from_str(coeff_str, &modulo).expect("bad string");
         assert_eq!(10413.to_string(), coeff.to_str());
     }
 }
