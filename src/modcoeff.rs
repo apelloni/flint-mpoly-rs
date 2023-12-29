@@ -252,6 +252,18 @@ impl ModCoeff {
         }
     }
 
+    /// Map to inverse a^-1 = b mod n
+    pub fn inv(&mut self) {
+        unsafe {
+            fmpz_mod_inv(
+                &mut self._res as *mut _,
+                &mut self.raw as *mut _,
+                &mut self.ctx as *mut _,
+            );
+            fmpz_swap(&mut self._res as *mut _, &mut self.raw as *mut _);
+        }
+    }
+
     /// Format to human readable string
     pub fn to_str(&self) -> String {
         format!("{}", self).to_string()

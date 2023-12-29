@@ -10,8 +10,8 @@
 //!     - [Rational Functions](QMRat)
 //! - __Finite Fields__:
 //!     - [Coefficients](ModCoeff)
-//!     - ~~Polynomials~~
-//!     - ~~Rational Functions~~
+//!     - [Polynomials](ModMPoly)
+//!     - [Rational Functions](ModMRat)
 //!
 //! [Flint]: https://flintlib.org
 //!
@@ -23,6 +23,10 @@ extern crate pest_derive;
 // TODO: use it
 pub const MAX_VARIABLE: usize = 10;
 
+/// Modulus
+mod modcoeff;
+mod modmpoly;
+mod modmrat;
 mod parser;
 /// Rational
 mod qcoeff;
@@ -32,10 +36,14 @@ mod qmrat;
 mod zcoeff;
 mod zmpoly;
 mod zmrat;
-/// Modulus
-mod modcoeff;
 
-pub use crate::parser::{parse_mpoly, parse_mrat};
+///Parser
+pub use crate::parser::{parse_mod_mpoly, parse_mod_mrat, parse_mpoly, parse_mrat};
+
+/// Modulus
+pub use crate::modcoeff::ModCoeff;
+pub use crate::modmpoly::ModMPoly;
+pub use crate::modmrat::ModMRat;
 /// Rational
 pub use crate::qcoeff::QCoeff;
 pub use crate::qmpoly::QMPoly;
@@ -44,5 +52,3 @@ pub use crate::qmrat::QMRat;
 pub use crate::zcoeff::ZCoeff;
 pub use crate::zmpoly::ZMPoly;
 pub use crate::zmrat::ZMRat;
-/// Modulus
-pub use crate::modcoeff::ModCoeff;

@@ -1,6 +1,4 @@
-use crate::qcoeff::QCoeff;
-use crate::qmpoly::QMPoly;
-use crate::qmrat::QMRat;
+use crate::{ModCoeff, ModMPoly, ModMRat, QCoeff, QMPoly, QMRat};
 //use num::{BigInt, BigRational};
 use pest::iterators::Pairs;
 use pest::Parser;
@@ -10,6 +8,7 @@ use std::str::FromStr;
 #[grammar = "grammar.pest"]
 pub struct INIParser;
 
+/// Parser for general rational function over Q
 pub fn parse_mrat(expr: &str, var_names: &[String]) -> Result<QMRat, &'static str> {
     let parsed = INIParser::parse(Rule::calculation, expr)
         .expect("Unsuccessful Parse") // unwrap the parse result
@@ -19,6 +18,7 @@ pub fn parse_mrat(expr: &str, var_names: &[String]) -> Result<QMRat, &'static st
     Ok(parsed_mrat)
 }
 
+/// Parser for general polynomial using the rational parser over Q
 pub fn parse_mpoly(expr: &str, var_names: &[String]) -> Result<QMPoly, &'static str> {
     let parsed = INIParser::parse(Rule::calculation, expr)
         .expect("Unsuccessful Parse") // unwrap the parse result
@@ -32,6 +32,39 @@ pub fn parse_mpoly(expr: &str, var_names: &[String]) -> Result<QMPoly, &'static 
     }
 }
 
+/// Parser for rational function over integers mod n
+pub fn parse_mod_mrat(
+    expr: &str,
+    var_names: &[String],
+    modulo: &u64,
+) -> Result<ModMRat, &'static str> {
+    let parsed = INIParser::parse(Rule::calculation, expr)
+        .expect("Unsuccessful Parse") // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+    let parsed_mod_mrat = parsed_eval_modrat(parsed.into_inner(), var_names, modulo).unwrap();
+    Ok(parsed_mod_mrat)
+}
+
+/// Parser for polynomial function over integers mod n via the rational parser
+pub fn parse_mod_mpoly(
+    expr: &str,
+    var_names: &[String],
+    modulo: &u64,
+) -> Result<ModMPoly, &'static str> {
+    let parsed = INIParser::parse(Rule::calculation, expr)
+        .expect("Unsuccessful Parse") // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+    let parsed_mod_mrat = parsed_eval_modrat(parsed.into_inner(), var_names, modulo).unwrap();
+    if parsed_mod_mrat.den.is_one() {
+        Ok(parsed_mod_mrat.num)
+    } else {
+        Err("Expected polynomial found rational function")
+    }
+}
+
+/// Parser for polynomials over rational numbers
 pub fn parsed_eval_rat(parser_rules: Pairs<Rule>, vars: &[String]) -> Result<QMRat, &'static str> {
     let mut block = QMRat::new(vars);
     let mut out = QMRat::new(vars);
@@ -153,6 +186,200 @@ pub fn parsed_eval_rat(parser_rules: Pairs<Rule>, vars: &[String]) -> Result<QMR
                         if start_of_input {
                             start_of_input = false;
                             out = QMRat::clone_from(&block);
+                        } else {
+                            out = &out + &block;
+                        }
+                        block.clear();
+                        last_rule = parsed_rule.as_rule();
+                    }
+                    Rule::add => {
+                        last_rule = if parsed_rule.as_rule() == Rule::add {
+                            Rule::add
+                        } else {
+                            Rule::subtract
+                        };
+                    }
+                    Rule::subtract => {
+                        last_rule = if parsed_rule.as_rule() == Rule::subtract {
+                            Rule::add
+                        } else {
+                            Rule::subtract
+                        };
+                    }
+                    _ => {
+                        panic!(
+                            "Unknown operation sequence! .. {:?}  {:?} ..",
+                            last_rule,
+                            parsed_rule.as_rule()
+                        )
+                    }
+                };
+            }
+            // The information about the binary operations *|/|^ that are performed within
+            // the block are used only a posteriori as information in `last_rule`
+            // The double multiplication is treated as a power operator
+            Rule::multiply | Rule::divide | Rule::power => {
+                match last_rule {
+                    Rule::num | Rule::var | Rule::expr => {
+                        last_rule = parsed_rule.as_rule();
+                    }
+                    Rule::multiply => last_rule = Rule::power,
+                    _ => {
+                        panic!(
+                            "Unknown operation sequence! .. {:?}  {:?} ..",
+                            last_rule,
+                            parsed_rule.as_rule()
+                        )
+                    }
+                };
+            }
+            x => {
+                println!("{:?}", x);
+                println!(" {:?}", parsed_rule.as_span());
+                last_rule = x;
+            }
+        };
+        //println!(
+        //    " -> {} [{}]",
+        //    out.to_str(var_names),
+        //    block.to_str(var_names)
+        //);
+    }
+    if !block.is_zero() {
+        out = &out + &block;
+    }
+    //println!("{}", out);
+    //println!("{}", out.to_str();
+    Ok(out)
+}
+
+/// Parser for modular polynomials over integer mod n
+pub fn parsed_eval_modrat(
+    parser_rules: Pairs<Rule>,
+    vars: &[String],
+    modulo: &u64,
+) -> Result<ModMRat, &'static str> {
+    let mut block = ModMRat::new(vars, modulo);
+    let mut out = ModMRat::new(vars, modulo);
+    let mut res = ModMRat::new(vars, modulo);
+    let mut pows = vec![0; vars.len()];
+    let mut exponent: i32;
+    let mut last_rule = Rule::add;
+    let mut start_of_input = true;
+    let mut found_var;
+    let mut dpower = false;
+    for parsed_rule in parser_rules.into_iter() {
+        //println!("{:?} \"{}\"", parsed_rule.as_rule(), parsed_rule.as_str());
+        match parsed_rule.as_rule() {
+            Rule::num | Rule::var | Rule::expr => {
+                // Process adjacent expressions as if there is an
+                // implicit multiplicaiton in between of them
+                if last_rule == Rule::num || last_rule == Rule::var || last_rule == Rule::expr {
+                    last_rule = Rule::multiply;
+                }
+
+                match (last_rule, parsed_rule.as_rule()) {
+                    // Process the information in the expression in terms of polynomial
+                    (Rule::power, Rule::num | Rule::expr) => {
+                        // Process the power of an expression considering
+                        // that one power its already stored in the block
+                        // so we need to generate the remaining (power-1)
+                        // contirbutions
+                        exponent = parsed_rule
+                            .clone()
+                            .into_inner()
+                            .as_str()
+                            .parse::<i32>()
+                            .expect("Exponent Parsing Error");
+                        //assert!(exponent > 0, "Exponents must be positive!");
+                        if dpower {
+                            if exponent <= 0 {
+                                res.pown((-exponent + 1) as u64);
+                                last_rule = Rule::multiply;
+                            }
+                            if exponent > 0 {
+                                res.pown((exponent - 1) as u64);
+                                last_rule = Rule::divide;
+                            }
+                        } else {
+                            if exponent <= 0 {
+                                res.pown((-exponent + 1) as u64);
+                                last_rule = Rule::divide;
+                            }
+                            if exponent > 0 {
+                                res.pown((exponent - 1) as u64);
+                                last_rule = Rule::multiply;
+                            }
+                        }
+                    }
+                    (_, Rule::num) => {
+                        let coeff =
+                            ModCoeff::from_str(parsed_rule.clone().into_inner().as_str(), modulo)
+                                .expect("bad string");
+                        for p in pows.iter_mut() {
+                            *p = 0;
+                        }
+                        res.clear();
+                        res.num.add_coeff(&pows, &coeff);
+                        dpower = last_rule == Rule::divide;
+                    }
+                    (_, Rule::var) => {
+                        found_var = false;
+                        let coeff = ModCoeff::one(modulo);
+                        for (vn, p) in pows.iter_mut().enumerate() {
+                            if parsed_rule.clone().into_inner().as_str() == vars[vn] {
+                                *p = 1;
+                                found_var = true;
+                            } else {
+                                *p = 0;
+                            }
+                        }
+                        if !found_var {
+                            panic!(
+                                "Unknown variable {:?} found. [ vars={:?} ]",
+                                parsed_rule.into_inner().as_str(),
+                                vars
+                            );
+                        }
+                        res.clear();
+                        res.num.add_coeff(&pows, &coeff);
+                        dpower = last_rule == Rule::divide;
+                    }
+                    (_, Rule::expr) => {
+                        res = parsed_eval_modrat(parsed_rule.into_inner(), vars, modulo)?;
+                        dpower = last_rule == Rule::divide;
+                    }
+                    _ => panic!("Impossible!"),
+                };
+                // append operation to the block based on `last_rule`
+                match last_rule {
+                    Rule::add => {
+                        block = ModMRat::clone_from(&res);
+                    }
+                    Rule::subtract => {
+                        block.clear();
+                        block = &block - &res;
+                    }
+                    Rule::multiply => {
+                        block = &block * &res;
+                    }
+                    Rule::divide => {
+                        block = &block / &res;
+                    }
+                    _ => {
+                        panic!("Unknown operation sequence! .. {:?}  expr ..", last_rule)
+                    }
+                };
+                last_rule = Rule::expr;
+            }
+            // When we have addition or subtraction we evaluate the block and add it to
+            // the output polynomial
+            Rule::add | Rule::subtract => {
+                match last_rule {
+                    Rule::num | Rule::var | Rule::expr => {
+                        if start_of_input {
+                            start_of_input = false;
+                            out = ModMRat::clone_from(&block);
                         } else {
                             out = &out + &block;
                         }
