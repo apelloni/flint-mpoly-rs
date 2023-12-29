@@ -2,6 +2,8 @@ use crate::parser::parse_mpoly;
 use crate::{QCoeff, ZMPoly};
 use flint_sys::fmpq::*;
 use flint_sys::fmpq_mpoly::*;
+use flint_sys::fmpz::*;
+use flint_sys::fmpz_mpoly::*;
 use flint_sys::mpoly::ordering_t_ORD_DEGLEX;
 use regex::Regex;
 use std::fmt;
@@ -329,27 +331,34 @@ impl QMPoly {
         rg.replace_all(format!("{}", self).as_str(), "$1")
             .to_string()
     }
-    /// Convert to ZMPoly
+    /// Convert to ZMPoly from QMPoly
+    /// The content of a fmpq_mpoly poly is store as the product of
+    /// a fmpq content and a fmpz_mpoly zpoly as
+    /// poly = conent * zpoly
     pub fn to_zmpoly(&self) -> Result<ZMPoly, &'static str> {
         unsafe {
-            fmpq_mpoly_get_denominator(
-                &self._coeff1.raw as *const _ as *mut _,
-                &self.raw as *const _ as *mut _,
-                &self.ctx as *const _ as *mut _,
-            );
-        }
-        if self._coeff1.is_one() {
-            let res = ZMPoly::new(&self.vars);
-            unsafe {
-                fmpq_mpoly_swap(
-                    &res.raw as *const _ as *mut _,
+            // Only if the content has a unit denominator we can cast the
+            // expression into the field of integers
+            if fmpz_is_one(&self.raw.content[0].den as *const _ as *mut _) == 1 {
+                let res_zpoly = ZMPoly::new(&self.vars);
+                let res = ZMPoly::new(&self.vars);
+                // Extract zpoly
+                fmpz_mpoly_swap(
+                    &res_zpoly.raw as *const _ as *mut _,
                     &self.raw.zpoly[0] as *const _ as *mut _,
+                    &res_zpoly.raw as *const _ as *mut _,
+                );
+                // Multiply by conent
+                fmpz_mpoly_scalar_mul_fmpz(
                     &res.raw as *const _ as *mut _,
-                )
+                    &res_zpoly.raw as *const _ as *mut _,
+                    &self.raw.content[0].num as *const _ as *mut _,
+                    &res.raw as *const _ as *mut _,
+                );
+                Ok(res)
+            } else {
+                Err("Non integer coefficints")
             }
-            Ok(res)
-        } else {
-            Err("Non integer coefficints")
         }
     }
 }

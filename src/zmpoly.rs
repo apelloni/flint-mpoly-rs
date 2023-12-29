@@ -1,8 +1,9 @@
 use crate::parser::parse_mpoly;
-use crate::zcoeff::ZCoeff;
+use crate::{QMPoly, ZCoeff,QCoeff};
 use flint_sys::fmpq_mpoly::fmpq_mpoly_get_denominator;
 use flint_sys::fmpz::*;
 use flint_sys::fmpz_mpoly::*;
+use flint_sys::fmpq_mpoly::*;
 use flint_sys::mpoly::ordering_t_ORD_DEGLEX;
 use regex::Regex;
 use std::fmt;
@@ -54,8 +55,8 @@ impl ZMPoly {
     /// ```
     /// use flint_mpoly::ZMPoly;
     /// let vars = [String::from("x1"),String::from("x2")];
-    /// let mpoly= ZMPoly::from_str("(x1+x2)", &vars).unwrap();
-    /// assert_eq!("+x1+x2",mpoly.to_str());
+    /// let mpoly= ZMPoly::from_str("(10*x1+10*x2)", &vars).unwrap();
+    /// assert_eq!("+10*x1+10*x2",mpoly.to_str());
     /// ```
     pub fn from_str(expr_str: &str, vars: &[String]) -> Result<Self, &'static str> {
         parse_mpoly(expr_str, vars)
@@ -331,6 +332,58 @@ impl ZMPoly {
         let rg = Regex::new(r"([+-])1\*").unwrap();
         rg.replace_all(format!("{}", self).as_str(), "$1")
             .to_string()
+    }
+
+    /// Convert the QMPoly
+    /// ```
+    /// use flint_mpoly::{ZMPoly,QMPoly};
+    /// let vars = [String::from("x1"),String::from("x2")];
+    /// let zpoly = ZMPoly::from_str("+2*x1+4*x2",&vars).unwrap();
+    /// let qpoly:QMPoly = zpoly.to_qmpoly();
+    /// assert_eq!("+2*x1+4*x2",qpoly.to_str());
+    /// ```
+    pub fn to_qmpoly(&self) -> QMPoly {
+        let mut res = QMPoly::new(&self.vars);
+        let mut c = QCoeff::default();
+        unsafe {
+            let length = fmpz_mpoly_length(
+                &self.raw as *const _ as *mut _,
+                &self.ctx as *const _ as *mut _,
+            );
+
+            for ci in 0..length {
+                // get coeff
+                fmpz_mpoly_get_term_coeff_fmpz(
+                    &self._coeff1.raw as *const _ as *mut _,
+                    &self.raw as *const _ as *mut _,
+                    ci,
+                    &self.ctx as *const _ as *mut _,
+                );
+                // get exponent
+                fmpz_mpoly_get_term_exp_ui(
+                    &self._exp as *const _ as *mut _,
+                    &self.raw as *const _ as *mut _,
+                    ci,
+                    &self.ctx as *const _ as *mut _,
+                );
+
+                if fmpz_is_zero(&self._coeff1.raw as *const _ as *mut _) == 0 {
+                    // Cast to fmpq
+                    fmpz_swap(
+                        &mut c.raw.num as *mut _,
+                        &self._coeff1.raw as *const _ as *mut _,
+                    );
+                    // add to polynomial
+                    fmpq_mpoly_set_coeff_fmpq_ui(
+                        &mut res.raw as *mut _,
+                        &mut c.raw as *mut _,
+                        self._exp.as_ptr(),
+                        &mut res.ctx as *mut _,
+                    );
+                }
+            }
+        }
+        res
     }
 }
 

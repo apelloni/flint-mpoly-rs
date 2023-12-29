@@ -457,7 +457,7 @@ impl QMRat {
         // Fill ZMRat
         let mut res = ZMRat::new(&self.vars);
         res.num = self.num.to_zmpoly()?;
-        res.den= self.den.to_zmpoly()?;
+        res.den = self.den.to_zmpoly()?;
         Ok(res)
     }
 }

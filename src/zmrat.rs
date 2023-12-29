@@ -1,6 +1,5 @@
 use crate::parse_mrat;
-use crate::ZCoeff;
-use crate::ZMPoly;
+use crate::{QMRat, ZCoeff, ZMPoly};
 use flint_sys::fmpz_mpoly::*;
 use regex::Regex;
 use std::fmt;
@@ -70,10 +69,10 @@ impl ZMRat {
     /// use flint_mpoly::ZMPoly;
     /// use flint_mpoly::ZMRat;
     /// let vars = [String::from("x1"),String::from("x2")];
-    /// let num= ZMPoly::from_str("x1+3 x2",&vars).unwrap();
+    /// let num= ZMPoly::from_str("6 x1+3 x2",&vars).unwrap();
     /// let den= ZMPoly::from_str("x1-x2",&vars).unwrap();
     /// let mrat = ZMRat::from_mpolys(&num,&den);
-    /// assert_eq!("(+x1+3*x2)/(+x1-x2)",mrat.to_str());
+    /// assert_eq!("(+6*x1+3*x2)/(+x1-x2)",mrat.to_str());
     /// ```
     pub fn from_mpolys(num: &ZMPoly, den: &ZMPoly) -> Self {
         ZMRat {
@@ -95,7 +94,9 @@ impl ZMRat {
     /// assert_eq!("(+x1+x2)/(+x1)",mrat.to_str());
     /// ```
     pub fn from_str(expr_str: &str, vars: &[String]) -> Result<Self, &'static str> {
-        parse_mrat(expr_str, vars).expect("parse rational").to_zmrat()
+        parse_mrat(expr_str, vars)
+            .expect("parse rational")
+            .to_zmrat()
     }
 
     /// Set rational from string assuming the variables already stored in ZMRat
@@ -227,7 +228,7 @@ impl ZMRat {
     /// mrat.num.set_from_str("(1+x1)*(x2-x1)").unwrap();
     /// mrat.den.set_from_str("(x1+x2)*(x2-x1)").unwrap();
     /// mrat.reduce();
-    /// assert_eq!("(+x1+1)/(+x1+x2)", mrat.to_str());
+    /// assert_eq!("(-x1-1)/(-x1-x2)", mrat.to_str());
     /// ```
     pub fn reduce(&mut self) {
         self.gcd();
@@ -319,6 +320,21 @@ impl ZMRat {
         let rg = Regex::new(r"([+-])1\*").unwrap();
         rg.replace_all(format!("{}", self).as_str(), "$1")
             .to_string()
+    }
+    /// Convert the QMRat
+    /// ```
+    /// use flint_mpoly::{ZMRat,QMRat};
+    /// let vars = [String::from("x1"),String::from("x2")];
+    /// let zrat = ZMRat::from_str("(+10*x1+4*x2)/(6*x2)",&vars).unwrap();
+    /// let qrat:QMRat = zrat.to_qmrat();
+    /// assert_eq!("(+5*x1+2*x2)/(+3*x2)",zrat.to_str());
+    /// assert_eq!("(+5*x1+2*x2)/(+3*x2)",qrat.to_str());
+    /// ```
+    pub fn to_qmrat(&self) -> QMRat {
+        let mut res = QMRat::new(&self.vars);
+        res.num = self.num.to_qmpoly();
+        res.den = self.den.to_qmpoly();
+        res
     }
 }
 
@@ -461,3 +477,64 @@ impl fmt::Display for ZMRat {
 // Send and Sync
 unsafe impl Send for ZMRat {}
 unsafe impl Sync for ZMRat {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn parse_zmrat_1() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+x1+x2)/(x2)", &vars).unwrap();
+        assert_eq!("(+x1+x2)/(+x2)", zrat.to_str());
+    }
+    #[test]
+    fn parse_zmrat_2() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+x1+x2)/(x2/2)", &vars).unwrap();
+        assert_eq!("(+2*x1+2*x2)/(+x2)", zrat.to_str());
+    }
+    #[test]
+    fn parse_zmrat_3() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+10*x1+4*x2)/(6*x2)", &vars).unwrap();
+        assert_eq!("(+5*x1+2*x2)/(+3*x2)", zrat.to_str());
+    }
+    #[test]
+    fn parse_zmrat_4() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+1/2*x1+5*x2)/(3*x1+6*x2)", &vars).unwrap();
+        assert_eq!("(+x1+10*x2)/(+6*x1+12*x2)", zrat.to_str());
+    }
+    #[test]
+    fn convert_zmrat_1() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+x1+x2)/(x2)", &vars).unwrap();
+        let mut qrat: QMRat = zrat.to_qmrat();
+        qrat.normalize();
+        assert_eq!("(+x1+x2)/(+x2)", qrat.to_str());
+    }
+    #[test]
+    fn convert_zmrat_2() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+x1+x2)/(x2/2)", &vars).unwrap();
+        let mut qrat: QMRat = zrat.to_qmrat();
+        qrat.normalize();
+        assert_eq!("(+2*x1+2*x2)/(+x2)", qrat.to_str());
+    }
+    #[test]
+    fn convert_zmrat_3() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+10*x1+4*x2)/(6*x2)", &vars).unwrap();
+        let mut qrat: QMRat = zrat.to_qmrat();
+        qrat.normalize();
+        assert_eq!("(+5/3*x1+2/3*x2)/(+x2)", qrat.to_str());
+    }
+    #[test]
+    fn convert_zmrat_4() {
+        let vars = [String::from("x1"), String::from("x2")];
+        let zrat = ZMRat::from_str("(+1/2*x1+5*x2)/(3*x1+6*x2)", &vars).unwrap();
+        let mut qrat: QMRat = zrat.to_qmrat();
+        qrat.full_reduce();
+        assert_eq!("(+1/6*x1+5/3*x2)/(+x1+2*x2)", qrat.to_str());
+    }
+}
