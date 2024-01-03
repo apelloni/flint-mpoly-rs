@@ -336,7 +336,7 @@ impl ModMPoly {
     pub fn free(&mut self) {
         self.clear();
         unsafe {
-            fmpz_mod_mpoly_realloc(&mut self.raw as *mut _, 0, &mut self.ctx as *mut _);
+            fmpz_mod_mpoly_init(&mut self.raw as *mut _, &mut self.ctx as *mut _);
         }
     }
 
