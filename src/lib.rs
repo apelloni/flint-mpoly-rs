@@ -23,6 +23,11 @@ extern crate pest_derive;
 // TODO: use it
 pub const MAX_VARIABLE: usize = 10;
 
+/// Collection of primes
+mod primes;
+pub use crate::primes::PRIMES31 as PRIMES;
+pub use crate::primes::PRIMES63 as LONGPRIMES;
+
 /// Modulus
 mod modcoeff;
 mod modmpoly;
