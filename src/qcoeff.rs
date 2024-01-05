@@ -1,3 +1,4 @@
+use flint_sys::flint::*;
 use flint_sys::fmpq::*;
 use flint_sys::fmpz::*;
 use num::BigInt;
@@ -331,6 +332,7 @@ impl Drop for QCoeff {
     fn drop(&mut self) {
         unsafe {
             fmpq_clear(&mut self.raw as *mut _);
+            flint_cleanup();
         }
     }
 }

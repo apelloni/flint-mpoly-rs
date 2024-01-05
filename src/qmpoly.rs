@@ -1,5 +1,6 @@
 use crate::parser::parse_mpoly;
 use crate::{QCoeff, ZMPoly};
+use flint_sys::flint::*;
 use flint_sys::fmpq::*;
 use flint_sys::fmpq_mpoly::*;
 use flint_sys::fmpz::*;
@@ -502,6 +503,7 @@ impl Drop for QMPoly {
         unsafe {
             fmpq_mpoly_clear(&mut self.raw as *mut _, &mut self.ctx as *mut _);
             fmpq_mpoly_ctx_clear(&mut self.ctx as *mut _);
+            flint_cleanup();
         }
     }
 }

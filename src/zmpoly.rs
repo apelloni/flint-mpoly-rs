@@ -1,9 +1,9 @@
 use crate::parser::parse_mpoly;
-use crate::{QMPoly, ZCoeff,QCoeff};
-use flint_sys::fmpq_mpoly::fmpq_mpoly_get_denominator;
+use crate::{QCoeff, QMPoly, ZCoeff};
+use flint_sys::flint::*;
+use flint_sys::fmpq_mpoly::*;
 use flint_sys::fmpz::*;
 use flint_sys::fmpz_mpoly::*;
-use flint_sys::fmpq_mpoly::*;
 use flint_sys::mpoly::ordering_t_ORD_DEGLEX;
 use regex::Regex;
 use std::fmt;
@@ -526,6 +526,7 @@ impl Drop for ZMPoly {
         unsafe {
             fmpz_mpoly_clear(&mut self.raw as *mut _, &mut self.ctx as *mut _);
             fmpz_mpoly_ctx_clear(&mut self.ctx as *mut _);
+            flint_cleanup();
         }
     }
 }

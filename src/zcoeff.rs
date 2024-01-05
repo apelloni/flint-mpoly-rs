@@ -1,3 +1,4 @@
+use flint_sys::flint::*;
 use flint_sys::fmpz::*;
 use num::BigInt;
 use regex::Regex;
@@ -299,6 +300,7 @@ impl Drop for ZCoeff {
     fn drop(&mut self) {
         unsafe {
             fmpz_clear(&mut self.raw as *mut _);
+            flint_cleanup();
         }
     }
 }
