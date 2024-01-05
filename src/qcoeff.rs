@@ -332,7 +332,7 @@ impl Drop for QCoeff {
     fn drop(&mut self) {
         unsafe {
             fmpq_clear(&mut self.raw as *mut _);
-            flint_cleanup();
+            //flint_cleanup();
         }
     }
 }

@@ -526,7 +526,7 @@ impl Drop for ZMPoly {
         unsafe {
             fmpz_mpoly_clear(&mut self.raw as *mut _, &mut self.ctx as *mut _);
             fmpz_mpoly_ctx_clear(&mut self.ctx as *mut _);
-            flint_cleanup();
+            //flint_cleanup();
         }
     }
 }

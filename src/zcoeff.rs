@@ -300,7 +300,7 @@ impl Drop for ZCoeff {
     fn drop(&mut self) {
         unsafe {
             fmpz_clear(&mut self.raw as *mut _);
-            flint_cleanup();
+            //flint_cleanup();
         }
     }
 }
