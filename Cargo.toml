@@ -1,7 +1,14 @@
 [package]
 name = "flint-mpoly"
 version = "0.1.0"
-edition = "2021"
+authors = ["apelloni <apelloni@ethz.ch>"]
+edition = "2023"
+description = "Multivariate polynomial arithmetic with FLINT backend"
+repository = "https://github.com/apelloni/flint-mpoly-rs"
+readme = "README.md"
+license = "GPL-3.0"
+keywords = ["modular", "arithmetic", "polynomial","multivariate","mpoly"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
