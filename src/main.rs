@@ -1,4 +1,10 @@
-use flint_mpoly::*;
+extern crate flint_mpoly;
+extern crate num;
+
+use crate::flint_mpoly::*;
+use flint_sys::flint::*;
+use flint_sys::fmpq_mpoly::*;
+use flint_sys::fmpz_mpoly::*;
 //use flint_mpoly::parser::*;
 
 use std::str::FromStr;

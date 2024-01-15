@@ -1,6 +1,6 @@
-use flint_sys::flint::*;
-use flint_sys::fmpq::*;
-use flint_sys::fmpz::*;
+use crate::flint_sys::flint::*;
+use crate::flint_sys::fmpq::*;
+use crate::flint_sys::fmpz::*;
 use num::BigInt;
 use regex::Regex;
 use std::ffi::CString;

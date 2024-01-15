@@ -23,6 +23,13 @@ extern crate pest_derive;
 // TODO: use it
 pub const MAX_VARIABLE: usize = 10;
 
+/// Flint hooks
+extern crate libc;
+extern crate regex;
+extern crate num;
+pub mod flint_rs;
+pub use crate::flint_rs as flint_sys;
+
 /// Collection of primes
 mod primes;
 pub use crate::primes::PRIMES31 as PRIMES;

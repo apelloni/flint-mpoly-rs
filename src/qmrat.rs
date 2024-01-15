@@ -1,6 +1,6 @@
 use crate::parse_mrat;
 use crate::{QCoeff, QMPoly, ZMPoly, ZMRat};
-use flint_sys::fmpq_mpoly::*;
+use crate::flint_sys::fmpq_mpoly::*;
 use regex::Regex;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};

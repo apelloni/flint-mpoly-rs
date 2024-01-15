@@ -2,7 +2,6 @@
 name = "flint-mpoly"
 version = "0.1.0"
 authors = ["apelloni <apelloni@ethz.ch>"]
-edition = "2023"
 description = "Multivariate polynomial arithmetic with FLINT backend"
 repository = "https://github.com/apelloni/flint-mpoly-rs"
 readme = "README.md"
@@ -14,7 +13,8 @@ keywords = ["modular", "arithmetic", "polynomial","multivariate","mpoly"]
 
 [dependencies]
 color-eyre = "0.6.2"
-flint-sys = {git="https://github.com/apelloni/flint-rs", branch="flint-3"}
+gmp-mpfr-sys = "1.6.1"
+libc = "0.2.152"
 num = "0.4.1"
 pest = "2.7.5"
 pest_derive = "2.7.5"

@@ -1,7 +1,7 @@
 use crate::parse_mod_mrat;
 use crate::ModCoeff;
 use crate::ModMPoly;
-use flint_sys::fmpz_mod_mpoly::*;
+use crate::flint_sys::fmpz_mod_mpoly::*;
 use regex::Regex;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};

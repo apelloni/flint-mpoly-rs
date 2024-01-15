@@ -1,12 +1,13 @@
 use crate::parser::parse_mod_mpoly;
 use crate::{ModCoeff, ZCoeff};
-use flint_sys::fmpz::*;
-use flint_sys::fmpz_mod_mpoly::*;
-use flint_sys::mpoly::ordering_t_ORD_DEGLEX;
+use crate::flint_sys::fmpz::*;
+use crate::flint_sys::fmpz_mod_mpoly::*;
+use crate::flint_sys::mpoly::ordering_t_ORD_DEGLEX;
 use regex::Regex;
 use std::fmt;
 use std::mem::MaybeUninit;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::convert::TryInto;
 
 /// Container for polynomials over rational numbers
 #[derive(Debug)]

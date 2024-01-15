@@ -1,11 +1,11 @@
 use crate::parser::parse_mpoly;
 use crate::{QCoeff, ZMPoly};
-use flint_sys::flint::*;
-use flint_sys::fmpq::*;
-use flint_sys::fmpq_mpoly::*;
-use flint_sys::fmpz::*;
-use flint_sys::fmpz_mpoly::*;
-use flint_sys::mpoly::ordering_t_ORD_DEGLEX;
+use crate::flint_sys::flint::*;
+use crate::flint_sys::fmpq::*;
+use crate::flint_sys::fmpq_mpoly::*;
+use crate::flint_sys::fmpz::*;
+use crate::flint_sys::fmpz_mpoly::*;
+use crate::flint_sys::mpoly::ordering_t_ORD_DEGLEX;
 use regex::Regex;
 use std::fmt;
 use std::mem::MaybeUninit;
