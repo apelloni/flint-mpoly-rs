@@ -7,6 +7,7 @@ use regex::Regex;
 use std::fmt;
 use std::mem::MaybeUninit;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::convert::TryInto;
 
 /// Container for polynomials over rational numbers
 #[derive(Debug)]

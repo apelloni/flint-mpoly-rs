@@ -7,6 +7,7 @@ use std::mem::MaybeUninit;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::result::Result;
 use std::str::FromStr;
+use std::convert::TryInto;
 
 /// Container for arbitrary precision rational numbers
 #[derive(Debug)]

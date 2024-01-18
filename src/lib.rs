@@ -37,6 +37,7 @@ mod parser;
 mod qcoeff;
 mod qmpoly;
 mod qmrat;
+mod zmpoly_q;
 /// Integer
 mod zcoeff;
 mod zmpoly;
@@ -53,6 +54,7 @@ pub use crate::modmrat::ModMRat;
 pub use crate::qcoeff::QCoeff;
 pub use crate::qmpoly::QMPoly;
 pub use crate::qmrat::QMRat;
+pub use crate::zmpoly_q::ZMPolyQ;
 /// Integer
 pub use crate::zcoeff::ZCoeff;
 pub use crate::zmpoly::ZMPoly;
