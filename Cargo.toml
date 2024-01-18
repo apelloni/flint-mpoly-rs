@@ -2,7 +2,7 @@
 name = "flint-mpoly"
 version = "0.1.0"
 authors = ["apelloni <apelloni@ethz.ch>"]
-edition = "2023"
+edition = "2021"
 description = "Multivariate polynomial arithmetic with FLINT backend"
 repository = "https://github.com/apelloni/flint-mpoly-rs"
 readme = "README.md"
