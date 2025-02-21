@@ -64,3 +64,7 @@ pub use crate::zmpoly_q::ZMPolyQ;
 pub use crate::zcoeff::ZCoeff;
 pub use crate::zmpoly::ZMPoly;
 pub use crate::zmrat::ZMRat;
+
+/// Matrix over mod n
+mod modnmat;
+pub use crate::modnmat::NModMat;
