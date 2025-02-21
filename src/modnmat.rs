@@ -10,7 +10,7 @@ pub struct NModMat {
 
 /// Container for polynomial that uses Flint as backend
 impl NModMat {
-    /// New 0 polynomial with selected variables
+    /// New 0 matrix of given size
     /// ```
     /// use flint_mpoly::NModMat;
     /// let cols = 10;
@@ -34,7 +34,7 @@ impl NModMat {
         }
     }
 
-    /// Initialize polynomial from string assuming the given variables
+    /// Set enty (i,j) to given value
     /// ```
     /// use flint_mpoly::NModMat;
     /// let cols = 10;
@@ -60,7 +60,7 @@ impl NModMat {
         unsafe { nmod_mat_get_entry(&mut self.raw as *mut _, row, col) }
     }
 
-    /// Initialize polynomial from string assuming the given variables
+    /// Set all entry of the matrix to 0
     /// ```
     /// use flint_mpoly::NModMat;
     /// let cols = 10;
@@ -84,7 +84,7 @@ impl NModMat {
         }
     }
 
-    /// Initialize polynomial from string assuming the given variables
+    /// Tranform matrix in Reduced Row Echelon Form (RREF)
     /// ```
     /// use flint_mpoly::NModMat;
     /// let cols = 10;
