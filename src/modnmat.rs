@@ -118,6 +118,40 @@ impl NModMat {
         unsafe { nmod_mat_rref(&mut self.raw as *mut _) }
     }
 
+    /// Compute rank of matrix
+    /// ```
+    /// use flint_mpoly::NModMat;
+    /// let cols = 10;
+    /// let rows = 10;
+    /// let module = 3;
+    /// let mut mat = NModMat::new(cols,cols,module);
+    /// for i in 0..rows{
+    ///     for j in 0..cols{
+    ///         mat.set_entry(i, j, (i+j) as u64 % module);
+    ///     }
+    /// }
+    /// for i in 0..rows{
+    ///     for j in 0..cols{
+    ///         print!("{: >width$}", mat.get_entry(i,j), width=4);
+    ///         //assert_eq!(0, mat.get_entry(i,j) as i64);
+    ///     }
+    ///     println!("\n");
+    /// }
+    ///
+    /// let rank = mat.rank();
+    /// assert_eq!(rank, 2);
+    /// //for i in 0..rank{
+    /// //    for j in 0..mat.ncols(){
+    /// //        print!("{: >width$}", mat.get_entry(i,j), width=4);
+    /// //        //assert_eq!(0, mat.get_entry(i,j) as i64);
+    /// //    }
+    /// //    println!("\n");
+    /// //}
+    /// ```
+    pub fn rank(&mut self) -> i64 {
+        unsafe { nmod_mat_rank(&mut self.raw as *mut _) }
+    }
+
     /// Get Number of cols
     pub fn ncols(&mut self) -> i64 {
         unsafe { nmod_mat_ncols(&mut self.raw as *mut _) }
